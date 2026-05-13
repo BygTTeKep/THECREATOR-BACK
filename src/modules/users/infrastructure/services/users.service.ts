@@ -1,0 +1,128 @@
+import {
+  Injectable,
+  InternalServerErrorException,
+  NotFoundException,
+} from '@nestjs/common';
+import { CreateUserRequestDto } from '../../presentation/dtos/createUser.dto';
+import { Repository } from 'typeorm';
+import { UserEntity } from '../../domain/entities/user.entity';
+import { CreateUserMapper } from '../mappers/createUser.mapper';
+import { InjectRepository } from '@nestjs/typeorm';
+import { ConfigService } from '@nestjs/config';
+import Twilio from 'twilio';
+import { UserStatus } from '../../domain/enums/userStatus.enum';
+import { SubscriptionsService } from 'src/modules/subscriptions/infrastructure/services/subscriptions.service';
+import { TiersService } from 'src/modules/tiers/infrastructure/services/tiers.service';
+import { CreateSubscriptionDto } from 'src/modules/subscriptions/presentation/dtos/createSubscription.dto';
+
+@Injectable()
+export class UsersService {
+  private readonly twilioClient: Twilio.Twilio;
+  private readonly twilioVerifyServiceSid: string;
+
+  constructor(
+    @InjectRepository(UserEntity)
+    private readonly usersRepository: Repository<UserEntity>,
+    private readonly createUserMapper: CreateUserMapper,
+    private readonly configService: ConfigService,
+    private readonly subscriptionsService: SubscriptionsService,
+    private readonly tiersService: TiersService,
+  ) {
+    const accountSid = this.configService.get<string>('TWILIO_ACCOUNT_SID');
+    const authToken = this.configService.get<string>('TWILIO_AUTH_TOKEN');
+    const verifyServiceSid = this.configService.get<string>(
+      'TWILIO_VERIFY_SERVICE_SID',
+    );
+
+    if (!accountSid || !authToken || !verifyServiceSid) {
+      throw new InternalServerErrorException('Twilio is not configured');
+    }
+
+    this.twilioClient = Twilio(accountSid, authToken);
+    this.twilioVerifyServiceSid = verifyServiceSid;
+  }
+
+  async getAllActiveUsers(): Promise<UserEntity[]> {
+    return this.usersRepository.find({ where: { status: UserStatus.ACTIVE } });
+  }
+
+  /**
+   * Создание пользователя
+   * @param dto - DTO для создания пользователя
+   * @returns пользователь
+   */
+  async createUser(dto: CreateUserRequestDto) {
+    const createUserDto = this.createUserMapper.toDto(dto);
+    const user = this.usersRepository.create(createUserDto);
+    return this.usersRepository.save(user);
+  }
+
+  async findByPhone(phone: string) {
+    return this.usersRepository.findOne({ where: { phone } });
+  }
+  async findByEmail(email: string) {
+    return this.usersRepository.findOne({ where: { email } });
+  }
+
+  async getUserById(id: string) {
+    return this.usersRepository.findOne({ where: { id } });
+  }
+  async updateUser(id: string, user: Partial<UserEntity>): Promise<UserEntity> {
+    const existingUser = await this.usersRepository.findOne({ where: { id } });
+    if (!existingUser) {
+      throw new NotFoundException('User not found');
+    }
+    Object.assign(existingUser, user);
+    return this.usersRepository.save(existingUser);
+  }
+
+  async updateUserSubscription(
+    userId: string,
+    createSubscriptionDto: CreateSubscriptionDto,
+  ) {
+    const user = await this.getUserById(userId);
+    if (!user) {
+      throw new NotFoundException('User not found');
+    }
+    await this.subscriptionsService.createSubscription(
+      userId,
+      createSubscriptionDto,
+    );
+    const recalculatedTiers = await this.recalculateTiers([user]);
+    for (const recalculatedTier of recalculatedTiers) {
+      await this.updateUser(recalculatedTier.userId, {
+        current_tier_id: recalculatedTier.tierId,
+      });
+    }
+  }
+  /**
+   * Пересчет тарифов для пользователей
+   *
+   * @param users пользователи для пересчета
+   * @returns массив пользователей с пересчитанными тарифами
+   */
+  async recalculateTiers(
+    users: UserEntity[],
+  ): Promise<{ userId: string; tierId: number }[]> {
+    const result: { userId: string; tierId: number }[] = [];
+    const subscriptions = await this.subscriptionsService.getSubscriptions(
+      users.map((user) => user.id),
+    );
+    for (const user of users) {
+      const subscription = subscriptions.find(
+        (subscription) => subscription.user_id === user.id,
+      );
+      if (subscription) {
+        const months = Math.floor(
+          (new Date().getTime() - new Date(subscription.started_at).getTime()) /
+            (1000 * 60 * 60 * 24 * 30),
+        );
+        const tier = await this.tiersService.getTierByMonths(months);
+        if (tier && user.current_tier_id !== tier?.id) {
+          result.push({ userId: user.id, tierId: tier.id });
+        }
+      }
+    }
+    return result;
+  }
+}

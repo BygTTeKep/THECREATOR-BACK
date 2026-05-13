@@ -1,0 +1,49 @@
+import { Injectable, Logger } from '@nestjs/common';
+import { getCountryByPhone } from 'src/core/utils/getCountryByPhone';
+import { DeliveryEntity } from '../../domain/entities/delivery.entity';
+import { Repository } from 'typeorm';
+import { InjectRepository } from '@nestjs/typeorm';
+
+@Injectable()
+export class DeliveryService {
+  private readonly logger = new Logger(DeliveryService.name);
+  constructor(
+    @InjectRepository(DeliveryEntity)
+    private readonly deliveryRepository: Repository<DeliveryEntity>,
+  ) {}
+  async getDeliveryByUserPhone(phone: string) {
+    try {
+      const countryCode = getCountryByPhone(phone);
+      if (!countryCode) {
+        throw new Error('Invalid phone number');
+      }
+      const delivery: DeliveryEntity | null | undefined =
+        await this.deliveryRepository
+          .createQueryBuilder('delivery')
+          .select([
+            'delivery.id as id',
+            'delivery.name as name',
+            'delivery.description as description',
+          ])
+          .leftJoin(
+            'delivery_country',
+            'delivery_country',
+            'delivery_country.delivery_id = delivery.id',
+          )
+          .leftJoin(
+            'countries',
+            'countries',
+            'countries.id = delivery_country.country_id',
+          )
+          .where('countries.code = :code', { code: countryCode })
+          .getRawOne();
+      if (!delivery) {
+        throw new Error('Delivery not found');
+      }
+      return delivery;
+    } catch (error) {
+      this.logger.error(error);
+      throw new Error('Failed to get delivery by user country');
+    }
+  }
+}
