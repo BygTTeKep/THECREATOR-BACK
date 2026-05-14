@@ -31,10 +31,6 @@ COPY package*.json ./
 RUN npm ci --omit=dev
 
 COPY --from=builder /app/dist ./dist
-COPY --from=builder /app/src/dataSource.ts ./src/dataSource.ts
-COPY --from=builder /app/src/migrations ./src/migrations
-COPY --from=builder /app/src/tsconfig.json ./tsconfig.json
-COPY --from=builder /app/src/tsconfig.build.json ./tsconfig.build.json
 
 EXPOSE 3001
 
