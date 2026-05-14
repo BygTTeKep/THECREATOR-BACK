@@ -5,14 +5,12 @@ services:
     image: postgres:16-alpine
     container_name: creator-postgres
     restart: unless-stopped
-    env_file:
-      - ../.env
+
     environment:
       POSTGRES_DB: ${DB_DATABASE}
       POSTGRES_USER: ${DB_USERNAME}
       POSTGRES_PASSWORD: ${DB_PASSWORD}
-    ports:
-      - "${DB_PORT}:5432"
+
     volumes:
       - postgres_data:/var/lib/postgresql/data
     healthcheck:
@@ -52,8 +50,7 @@ services:
         condition: service_healthy
       redis:
         condition: service_healthy
-    env_file:
-      - ../.env
+
     environment:
       DB_HOST: ${DB_HOST}
       DB_PORT: ${DB_PORT}
@@ -61,6 +58,19 @@ services:
       DB_PASSWORD: ${DB_PASSWORD}
       DB_DATABASE: ${DB_DATABASE}
       REDIS_URL: ${REDIS_URL}
+      DB_AUTO_LOAD_ENTITIES: ${DB_AUTO_LOAD_ENTITIES}
+      DB_SYNCHRONIZE: ${DB_SYNCHRONIZE}
+      JWT_SECRET: ${JWT_SECRET}
+      FRONTEND_URL: ${FRONTEND_URL}
+      TELEGRAM_BOT_TOKEN: ${TELEGRAM_BOT_TOKEN}
+      TELEGRAM_CHAT_ID: ${TELEGRAM_CHAT_ID}
+      SMS_BASE_URL: ${SMS_BASE_URL}
+      SMS_API_KEY: ${SMS_API_KEY}
+      SMS_EMAIL_COMPANY: ${SMS_EMAIL_COMPANY}
+      SDEK_BASE_URL: ${SDEK_BASE_URL}
+      SDEK_CLIENT_ID: ${SDEK_CLIENT_ID}
+      SDEK_CLIENT_SECRET: ${SDEK_CLIENT_SECRET}
+      SDEK_ACCESS_TOKEN: ${SDEK_ACCESS_TOKEN}
     networks:
       - thecreator-network
 
