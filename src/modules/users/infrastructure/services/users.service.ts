@@ -1,15 +1,10 @@
-import {
-  Injectable,
-  InternalServerErrorException,
-  NotFoundException,
-} from '@nestjs/common';
+import { Injectable, NotFoundException } from '@nestjs/common';
 import { CreateUserRequestDto } from '../../presentation/dtos/createUser.dto';
 import { Repository } from 'typeorm';
 import { UserEntity } from '../../domain/entities/user.entity';
 import { CreateUserMapper } from '../mappers/createUser.mapper';
 import { InjectRepository } from '@nestjs/typeorm';
 import { ConfigService } from '@nestjs/config';
-import Twilio from 'twilio';
 import { UserStatus } from '../../domain/enums/userStatus.enum';
 import { SubscriptionsService } from 'src/modules/subscriptions/infrastructure/services/subscriptions.service';
 import { TiersService } from 'src/modules/tiers/infrastructure/services/tiers.service';
@@ -17,9 +12,6 @@ import { CreateSubscriptionDto } from 'src/modules/subscriptions/presentation/dt
 
 @Injectable()
 export class UsersService {
-  private readonly twilioClient: Twilio.Twilio;
-  private readonly twilioVerifyServiceSid: string;
-
   constructor(
     @InjectRepository(UserEntity)
     private readonly usersRepository: Repository<UserEntity>,
@@ -27,20 +19,7 @@ export class UsersService {
     private readonly configService: ConfigService,
     private readonly subscriptionsService: SubscriptionsService,
     private readonly tiersService: TiersService,
-  ) {
-    const accountSid = this.configService.get<string>('TWILIO_ACCOUNT_SID');
-    const authToken = this.configService.get<string>('TWILIO_AUTH_TOKEN');
-    const verifyServiceSid = this.configService.get<string>(
-      'TWILIO_VERIFY_SERVICE_SID',
-    );
-
-    if (!accountSid || !authToken || !verifyServiceSid) {
-      throw new InternalServerErrorException('Twilio is not configured');
-    }
-
-    this.twilioClient = Twilio(accountSid, authToken);
-    this.twilioVerifyServiceSid = verifyServiceSid;
-  }
+  ) {}
 
   async getAllActiveUsers(): Promise<UserEntity[]> {
     return this.usersRepository.find({ where: { status: UserStatus.ACTIVE } });
