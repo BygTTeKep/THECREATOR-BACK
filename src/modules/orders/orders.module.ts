@@ -9,17 +9,31 @@ import { RulesModule } from '../rules/rules.module';
 import { ProductsModule } from '../products/products.module';
 import { TelegramModule } from '../telegram/telegram.module';
 import { UsersModule } from '../users/users.module';
-
+import { FeatureFlagModule } from '../features-flag/featureFlag.module';
+import { PaymentModule } from '../payment/payment.module';
+import { ProductVariantsEntity } from '../products/domain/entities/productVariants.entity';
+import { OrderEventsListenerService } from './infrastructure/services/orderEventsListener.service';
 @Module({
   imports: [
-    TypeOrmModule.forFeature([OrdersEntity, OrderItemsEntity]),
+    TypeOrmModule.forFeature([
+      OrdersEntity,
+      OrderItemsEntity,
+      ProductVariantsEntity,
+    ]),
     RulesModule,
     ProductsModule,
     TelegramModule,
     UsersModule,
+    FeatureFlagModule,
+    PaymentModule,
   ],
   controllers: [OrdersController],
-  providers: [OrdersService, CreateOrderMapper],
+  providers: [
+    OrdersService,
+    CreateOrderMapper,
+    OrderEventsListenerService,
+    OrderEventsListenerService,
+  ],
   exports: [OrdersService],
 })
 export class OrdersModule {}

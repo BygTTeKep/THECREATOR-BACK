@@ -32,8 +32,11 @@ export class DropsController {
     type: [GetDropsResponseDto],
   })
   @Post('all')
-  async getAllDrops(@Body() getDropsDto: GetDropsDto) {
-    return this.dropsService.getAllDrops(getDropsDto);
+  async getAllDrops(
+    @Body() getDropsDto: GetDropsDto,
+    @AuthUser() user: UserEntity,
+  ) {
+    return this.dropsService.getAllDrops(getDropsDto, user);
   }
   @Get(':id')
   @ApiOperation({ summary: 'Get a drop by ID' })

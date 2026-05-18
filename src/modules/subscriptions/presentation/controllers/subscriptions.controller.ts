@@ -31,7 +31,7 @@ export class SubscriptionsController {
     @Body() createSubscriptionDto: CreateSubscriptionDto,
   ) {
     return this.subscriptionsService.createSubscription(
-      user.id,
+      user,
       createSubscriptionDto,
     );
   }
@@ -47,7 +47,7 @@ export class SubscriptionsController {
     @Body() createSubscriptionDto: CreateSubscriptionDto,
   ) {
     return this.subscriptionsService.createSubscription(
-      user.id,
+      user,
       createSubscriptionDto,
     );
   }

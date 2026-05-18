@@ -14,26 +14,37 @@ import { RulesService } from 'src/modules/rules/infrastructure/services/rules.se
 import { ProductsService } from 'src/modules/products/infrastructure/services/products.service';
 import { TelegramService } from 'src/modules/telegram/infrastructure/services/telegram.service';
 import { UsersService } from 'src/modules/users/infrastructure/services/users.service';
+import { FeatureFlagService } from 'src/modules/features-flag/infrastructure/services/featureFlag.service';
+import { PaymentsService } from 'src/modules/payment/infrastructure/services/payments.service';
+import { FeatureFlagEnum } from 'src/modules/features-flag/domain/enums/ff.enum';
+import { CreatePaymentMapper } from 'src/modules/payment/infrastructure/services/youkassa/mappers/createPayment.mapper';
+import { PaymentVariantsEnum } from 'src/modules/payment/domain/enums/paymentVariants.enum';
+import { CurrencyEnum } from 'src/modules/payment/domain/enums/currency.enum';
+import { ProductVariantsEntity } from 'src/modules/products/domain/entities/productVariants.entity';
 
 @Injectable()
 export class OrdersService {
   constructor(
     @InjectRepository(OrdersEntity)
     private readonly ordersRepository: Repository<OrdersEntity>,
-    @InjectRepository(OrderItemsEntity)
-    private readonly orderItemsRepository: Repository<OrderItemsEntity>,
     private readonly createOrderMapper: CreateOrderMapper,
     private readonly productsService: ProductsService,
     private readonly rulesService: RulesService,
     private readonly telegramService: TelegramService,
     private readonly usersService: UsersService,
+    private readonly ffService: FeatureFlagService,
+    private readonly paymentService: PaymentsService,
+    private readonly createPaymentMapper: CreatePaymentMapper,
     @InjectDataSource()
     private readonly dataSource: DataSource,
   ) {}
-  async createOrder(order: CreateOrderDto, user: UserEntity) {
-    // TODO обвернуть в транзакцию и сделать rollback при ошибке
-    // Проверяем, может ли пользователь купить этот продукт
+  async createOrder(
+    order: CreateOrderDto,
+    user: UserEntity,
+  ): Promise<string | null> {
     try {
+      let returnUrl: string | null = null;
+
       const canBuy = await this.rulesService.canUserBuyProduct(
         user,
         order.dropId,
@@ -60,16 +71,10 @@ export class OrdersService {
           if (productVariants.length === 0) {
             throw new BadRequestException('Products not found');
           }
+
           // Считаем общую стоимость заказа
-          const totalAmount = productVariants.reduce((acc, product) => {
-            const item = order.products.find(
-              (item) => item.product_id === product.product_id,
-            );
-            if (!item) {
-              return acc;
-            }
-            return acc + product.price * item.quantity;
-          }, 0);
+          const totalAmount = this.getTotalAmount(order, productVariants);
+
           // Создаем новый заказ
           const newOrder = await transactionalEntityManager.save(
             OrdersEntity,
@@ -81,6 +86,25 @@ export class OrdersService {
               drop_id: order.dropId,
             }),
           );
+          const isPaymentForOrdersEnabled =
+            await this.ffService.isFeatureFlagActive(
+              FeatureFlagEnum.PAYMENT_FOR_ORDERS,
+            );
+          if (isPaymentForOrdersEnabled) {
+            // Создаем платеж в платежной системе
+            const payment = await this.paymentService
+              .createPaymentFactory(PaymentVariantsEnum.YOUKASSA)
+              .createPayment(
+                this.createPaymentMapper.toYoukassaRequest({
+                  amount: {
+                    value: totalAmount.toString(),
+                    currency: CurrencyEnum.RUB,
+                  },
+                  description: `Payment for the order ${newOrder.id}`,
+                }),
+              );
+            returnUrl = payment.confirmation.confirmation_url;
+          }
           // Создаем новые заказы для продуктов
           const orderItems: CreateOrderItemDto[] = this.createOrderMapper.toDto(
             order,
@@ -117,8 +141,6 @@ export class OrdersService {
               quantity,
             );
           }
-
-          return newOrder;
         },
       );
       await this.usersService.updateUser(user.id, {
@@ -128,6 +150,7 @@ export class OrdersService {
           shippingAddress: order.shippingAddress,
         },
       });
+      return returnUrl;
     } catch (error) {
       throw new BadRequestException(error.message);
     }
@@ -151,5 +174,24 @@ export class OrdersService {
       .andWhere('order_items.product_id IN (:...productIds)', { productIds })
       .getRawMany();
     return orders as OrderItemsEntity[];
+  }
+  async updateOrderStatus(orderId: string, status: OrderStatusEnum) {
+    await this.ordersRepository.update(orderId, { status });
+  }
+  private getTotalAmount(
+    order: CreateOrderDto,
+    productVariants: ProductVariantsEntity[],
+  ): number {
+    // Считаем общую стоимость заказа
+    const totalAmount = productVariants.reduce((acc, product) => {
+      const item = order.products.find(
+        (item) => item.product_id === product.product_id,
+      );
+      if (!item) {
+        return acc;
+      }
+      return acc + product.price * item.quantity;
+    }, 0);
+    return totalAmount;
   }
 }

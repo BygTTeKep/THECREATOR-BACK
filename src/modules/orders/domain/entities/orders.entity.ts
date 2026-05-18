@@ -25,4 +25,7 @@ export class OrdersEntity {
 
   @Column({ type: 'int' })
   drop_id: number;
+
+  @Column({ type: 'varchar', length: 255, nullable: true })
+  payment_id: string;
 }

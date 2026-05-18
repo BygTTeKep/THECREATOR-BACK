@@ -19,6 +19,7 @@ import { GetDropsMapper } from '../mappers/getDrops.mapper';
 import { UpdateDropDto } from '../../presentation/dtos/updateDrop.dto';
 import { ProductsService } from 'src/modules/products/infrastructure/services/products.service';
 import { TiersService } from 'src/modules/tiers/infrastructure/services/tiers.service';
+import { RolesEnum } from 'src/core/enums/roles.enum';
 
 @Injectable()
 export class DropsService {
@@ -35,6 +36,7 @@ export class DropsService {
   ) {}
   async getAllDrops(
     getDropsDto: GetDropsDto,
+    user: UserEntity,
   ): Promise<GetDropsResponseWithPageCountDto> {
     const { pagination, filters } = getDropsDto;
     const { page, limit } = pagination;
@@ -51,7 +53,10 @@ export class DropsService {
         'drops.is_active as is_active',
         'drops.tier as tier',
       ]);
-    query.where('drops.is_visible = true');
+    if (user.metadata.role !== RolesEnum.ADMIN) {
+      query.where('drops.is_visible = true');
+    }
+
     if (is_active !== undefined) {
       query.where('drops.is_active = :is_active', { is_active });
     }

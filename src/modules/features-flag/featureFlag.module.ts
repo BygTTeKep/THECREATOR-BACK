@@ -7,5 +7,6 @@ import { FeatureFlagEntity } from './domain/entities/featureFlag.entity';
   imports: [TypeOrmModule.forFeature([FeatureFlagEntity])],
   controllers: [FeatureFlagController],
   providers: [FeatureFlagService],
+  exports: [FeatureFlagService],
 })
 export class FeatureFlagModule {}

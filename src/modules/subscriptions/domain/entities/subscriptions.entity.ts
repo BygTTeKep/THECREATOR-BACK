@@ -33,4 +33,7 @@ export class SubscriptionsEntity {
 
   @Column({ type: 'integer', nullable: false })
   subscription_plan_id: number;
+
+  @Column({ type: 'varchar', length: 255, nullable: true })
+  payment_id: string;
 }

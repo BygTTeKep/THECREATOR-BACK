@@ -3,6 +3,8 @@ import { SubscriptionsEntity } from '../../domain/entities/subscriptions.entity'
 import {
   BadRequestException,
   Injectable,
+  InternalServerErrorException,
+  Logger,
   NotFoundException,
 } from '@nestjs/common';
 import { InjectDataSource, InjectRepository } from '@nestjs/typeorm';
@@ -11,9 +13,17 @@ import { SubscriptionsStatus } from '../../domain/enums/subscriptions.enum';
 import { SubscriptionPlanEntity } from '../../domain/entities/subscriptionPlan.entity';
 import { CreateSubscriptionDto } from '../../presentation/dtos/createSubscription.dto';
 import { GetPlansMapper } from '../mappers/getPlans.mapper';
+import { PaymentsService } from 'src/modules/payment/infrastructure/services/payments.service';
+import { UserEntity } from 'src/modules/users/domain/entities/user.entity';
+import { PaymentVariantsEnum } from 'src/modules/payment/domain/enums/paymentVariants.enum';
+import { CurrencyEnum } from 'src/modules/payment/domain/enums/currency.enum';
+import { CreatePaymentMapper } from 'src/modules/payment/infrastructure/services/youkassa/mappers/createPayment.mapper';
+import { FeatureFlagService } from 'src/modules/features-flag/infrastructure/services/featureFlag.service';
+import { FeatureFlagEnum } from 'src/modules/features-flag/domain/enums/ff.enum';
 
 @Injectable()
 export class SubscriptionsService {
+  private readonly logger: Logger = new Logger(SubscriptionsService.name);
   constructor(
     @InjectRepository(SubscriptionsEntity)
     private readonly subscriptionsRepository: Repository<SubscriptionsEntity>,
@@ -22,6 +32,9 @@ export class SubscriptionsService {
     private readonly subscriptionPlansRepository: Repository<SubscriptionPlanEntity>,
     @InjectDataSource() private readonly dataSource: DataSource,
     private readonly getPlansMapper: GetPlansMapper,
+    private readonly paymentService: PaymentsService,
+    private readonly createPaymentMapper: CreatePaymentMapper,
+    private readonly ffService: FeatureFlagService,
   ) {}
   private readonly SUB_DURATION_MS = 30 * 24 * 60 * 60 * 1000;
   private readonly THREE_DAYS_MS = 3 * 24 * 60 * 60 * 1000;
@@ -67,56 +80,89 @@ export class SubscriptionsService {
    * @returns - new subscription
    */
   async createSubscription(
-    userId: string,
+    user: UserEntity,
     dto: CreateSubscriptionDto,
-  ): Promise<SubscriptionsEntity> {
-    const existingSubscription = await this.getSubscriptionByUserId(userId);
-    if (existingSubscription) {
-      const timeLeft =
-        existingSubscription.current_period_end.getTime() -
-        new Date().getTime();
+  ): Promise<string | null> {
+    try {
+      let returnUrl: string | null = null;
+      const existingSubscription = await this.getSubscriptionByUserId(user.id);
 
-      if (timeLeft > this.THREE_DAYS_MS) {
-        throw new BadRequestException(
-          'Subscription can be renewed only in last 3 days',
-        );
+      if (existingSubscription) {
+        const timeLeft =
+          existingSubscription.current_period_end.getTime() -
+          new Date().getTime();
+
+        if (timeLeft > this.THREE_DAYS_MS) {
+          throw new BadRequestException(
+            'Subscription can be renewed only in last 3 days',
+          );
+        }
       }
-    }
-    const plan = await this.subscriptionPlansRepository.findOne({
-      where: { id: dto.planId },
-    });
-    if (!plan) {
-      throw new NotFoundException('Plan not found');
-    }
-    // меняем статус у всех предыдущих активных подписок на past_due
-    const oldSubscriptions = await this.getNotCanceledSubscriptions([userId]);
-    if (oldSubscriptions.length > 0) {
-      const oldSubscriptionIds = oldSubscriptions.map(
-        (subscription) => subscription.id,
+      // TODO определять по переданному типу
+      const paymentService = this.paymentService.createPaymentFactory(
+        PaymentVariantsEnum.YOUKASSA,
       );
-      await this.subscriptionsRepository.update(oldSubscriptionIds, {
-        status: SubscriptionsStatus.PAST_DUE,
-      });
-    }
-    const newSubscription = await this.subscriptionsRepository.save({
-      user_id: userId,
-      subscription_plan_id: dto.planId,
-      started_at: new Date(),
-      status: 'active',
-      current_period_end: new Date(new Date().getTime() + this.SUB_DURATION_MS),
-    });
-    const months = (await this.getNotCanceledSubscriptions([userId])).length;
-    const tier = await this.tiersService.getTierByMonths(months);
 
-    if (tier) {
-      await this.dataSource
-        .createQueryBuilder()
-        .update('users')
-        .set({ current_tier_id: tier.id, total_months: months })
-        .where('id = :userId', { userId: userId })
-        .execute();
+      const plan = await this.subscriptionPlansRepository.findOne({
+        where: { id: dto.planId },
+      });
+
+      if (!plan || !plan.price) {
+        throw new NotFoundException('Plan not found');
+      }
+      const isPaymentForSubEnabled = await this.ffService.isFeatureFlagActive(
+        FeatureFlagEnum.PAYMENT_FOR_SUBSCRIPTION,
+      );
+      // Создаем платеж в платежной системе
+      if (isPaymentForSubEnabled) {
+        const payment = await paymentService.createPayment(
+          this.createPaymentMapper.toYoukassaRequest({
+            amount: {
+              value: plan.price.toString(),
+              currency: CurrencyEnum.RUB,
+            },
+            description: `Payment for the subscription ${plan.name}`,
+          }),
+        );
+        returnUrl = payment.confirmation.confirmation_url;
+      }
+      // меняем статус у всех предыдущих активных подписок на past_due
+      const oldSubscriptions = await this.getNotCanceledSubscriptions([
+        user.id,
+      ]);
+      if (oldSubscriptions.length > 0) {
+        const oldSubscriptionIds = oldSubscriptions.map(
+          (subscription) => subscription.id,
+        );
+        await this.subscriptionsRepository.update(oldSubscriptionIds, {
+          status: SubscriptionsStatus.PAST_DUE,
+        });
+      }
+      await this.subscriptionsRepository.save({
+        user_id: user.id,
+        subscription_plan_id: dto.planId,
+        started_at: new Date(),
+        status: 'active',
+        current_period_end: new Date(
+          new Date().getTime() + this.SUB_DURATION_MS,
+        ),
+      });
+      const months = (await this.getNotCanceledSubscriptions([user.id])).length;
+      const tier = await this.tiersService.getTierByMonths(months);
+
+      if (tier) {
+        await this.dataSource
+          .createQueryBuilder()
+          .update('users')
+          .set({ current_tier_id: tier.id, total_months: months })
+          .where('id = :userId', { userId: user.id })
+          .execute();
+      }
+      return returnUrl;
+    } catch (error) {
+      this.logger.error(error);
+      throw new InternalServerErrorException('Failed to create subscription');
     }
-    return newSubscription;
   }
   async cancelSubscription(userId: string): Promise<void> {
     const existingSubscription = await this.subscriptionsRepository.findOne({

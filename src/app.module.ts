@@ -25,6 +25,8 @@ import KeyvRedis, { Keyv } from '@keyv/redis';
 import { KeyvCacheableMemory } from 'cacheable';
 import { DeliveryModule } from './modules/delivery/delivery.module';
 import { FeatureFlagModule } from './modules/features-flag/featureFlag.module';
+import { EventEmitterModule } from '@nestjs/event-emitter';
+import { PaymentModule } from './modules/payment/payment.module';
 
 @Module({
   imports: [
@@ -92,6 +94,10 @@ import { FeatureFlagModule } from './modules/features-flag/featureFlag.module';
     SmsModule,
     DeliveryModule,
     FeatureFlagModule,
+    EventEmitterModule.forRoot({
+      global: true,
+    }),
+    PaymentModule,
   ],
   controllers: [AppController],
   providers: [AppService],

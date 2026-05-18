@@ -64,7 +64,7 @@ export class UsersService {
       throw new NotFoundException('User not found');
     }
     await this.subscriptionsService.createSubscription(
-      userId,
+      user,
       createSubscriptionDto,
     );
     const recalculatedTiers = await this.recalculateTiers([user]);
