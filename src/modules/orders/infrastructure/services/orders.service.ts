@@ -21,6 +21,7 @@ import { CreatePaymentMapper } from 'src/modules/payment/infrastructure/services
 import { PaymentVariantsEnum } from 'src/modules/payment/domain/enums/paymentVariants.enum';
 import { CurrencyEnum } from 'src/modules/payment/domain/enums/currency.enum';
 import { ProductVariantsEntity } from 'src/modules/products/domain/entities/productVariants.entity';
+import { GetOrdersDto } from '../../presentation/dtos/getOrders.dto';
 
 @Injectable()
 export class OrdersService {
@@ -193,5 +194,24 @@ export class OrdersService {
       return acc + product.price * item.quantity;
     }, 0);
     return totalAmount;
+  }
+  async getOrdersByUserId(
+    getOrdersDto: GetOrdersDto,
+    userId: string,
+  ): Promise<OrdersEntity[]> {
+    const { pagination } = getOrdersDto;
+    const { page, limit } = pagination;
+    return this.ordersRepository
+      .createQueryBuilder('orders')
+      .select('orders.id', 'id')
+      .addSelect('orders.status', 'status')
+      .addSelect('orders.total_amount', 'total_amount')
+      .addSelect('orders.created_at', 'created_at')
+      .addSelect('orders.drop_id', 'drop_id')
+      .where('orders.user_id = :userId', { userId })
+      .orderBy('orders.created_at', 'DESC')
+      .offset((page - 1) * limit)
+      .limit(limit)
+      .getRawMany();
   }
 }
