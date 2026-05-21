@@ -21,7 +21,10 @@ import { CreatePaymentMapper } from 'src/modules/payment/infrastructure/services
 import { PaymentVariantsEnum } from 'src/modules/payment/domain/enums/paymentVariants.enum';
 import { CurrencyEnum } from 'src/modules/payment/domain/enums/currency.enum';
 import { ProductVariantsEntity } from 'src/modules/products/domain/entities/productVariants.entity';
-import { GetOrdersDto } from '../../presentation/dtos/getOrders.dto';
+import {
+  GetOrdersDto,
+  GetOrdersResponseDto,
+} from '../../presentation/dtos/getOrders.dto';
 
 @Injectable()
 export class OrdersService {
@@ -198,7 +201,7 @@ export class OrdersService {
   async getOrdersByUserId(
     getOrdersDto: GetOrdersDto,
     userId: string,
-  ): Promise<OrdersEntity[]> {
+  ): Promise<GetOrdersResponseDto[]> {
     const { pagination } = getOrdersDto;
     const { page, limit } = pagination;
     return this.ordersRepository
@@ -208,6 +211,7 @@ export class OrdersService {
       .addSelect('orders.total_amount', 'total_amount')
       .addSelect('orders.created_at', 'created_at')
       .addSelect('orders.drop_id', 'drop_id')
+      .addSelect('orders.tracking_number', 'tracking_number')
       .where('orders.user_id = :userId', { userId })
       .orderBy('orders.created_at', 'DESC')
       .offset((page - 1) * limit)

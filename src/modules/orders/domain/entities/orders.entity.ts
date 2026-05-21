@@ -28,4 +28,7 @@ export class OrdersEntity {
 
   @Column({ type: 'varchar', length: 255, nullable: true })
   payment_id: string;
+
+  @Column({ type: 'varchar', length: 255, nullable: true })
+  tracking_number: string;
 }

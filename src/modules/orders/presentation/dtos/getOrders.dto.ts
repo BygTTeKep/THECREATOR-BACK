@@ -36,4 +36,7 @@ export class GetOrdersResponseDto {
   created_at: Date;
   @ApiProperty({ description: 'Order drop ID', example: 1 })
   drop_id: number;
+
+  @ApiProperty({ description: 'Order tracking number', example: '1234567890' })
+  tracking_number: string;
 }
