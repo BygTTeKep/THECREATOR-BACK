@@ -9,6 +9,8 @@ import { UserStatus } from '../../domain/enums/userStatus.enum';
 import { SubscriptionsService } from 'src/modules/subscriptions/infrastructure/services/subscriptions.service';
 import { TiersService } from 'src/modules/tiers/infrastructure/services/tiers.service';
 import { CreateSubscriptionDto } from 'src/modules/subscriptions/presentation/dtos/createSubscription.dto';
+import { GetUserByIdResponseDto } from '../../presentation/dtos/getUserById.dto';
+import { GetUserByIdMapper } from '../mappers/getUserById.mapper';
 
 @Injectable()
 export class UsersService {
@@ -19,6 +21,7 @@ export class UsersService {
     private readonly configService: ConfigService,
     private readonly subscriptionsService: SubscriptionsService,
     private readonly tiersService: TiersService,
+    private readonly getUserByIdMapper: GetUserByIdMapper,
   ) {}
 
   async getAllActiveUsers(): Promise<UserEntity[]> {
@@ -43,8 +46,14 @@ export class UsersService {
     return this.usersRepository.findOne({ where: { email } });
   }
 
-  async getUserById(id: string) {
-    return this.usersRepository.findOne({ where: { id } });
+  async getUserById(id: string): Promise<GetUserByIdResponseDto> {
+    const haveActiveSubscription =
+      await this.subscriptionsService.getSubscriptionByUserId(id);
+    const user = await this.usersRepository.findOne({ where: { id } });
+    if (!user) {
+      throw new NotFoundException('User not found');
+    }
+    return this.getUserByIdMapper.toDto(user, !!haveActiveSubscription);
   }
   async updateUser(id: string, user: Partial<UserEntity>): Promise<UserEntity> {
     const existingUser = await this.usersRepository.findOne({ where: { id } });

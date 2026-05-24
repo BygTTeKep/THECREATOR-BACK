@@ -19,7 +19,6 @@ export class UsersController {
   })
   @Get('me')
   async me(@AuthUser() user: UserEntity) {
-    // TODO: добавить маппер для преобразования UserEntity в UserResponseDto
     await this.usersService.recalculateTiers([user]);
     return this.usersService.getUserById(user.id);
   }

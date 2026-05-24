@@ -20,6 +20,7 @@ import { CurrencyEnum } from 'src/modules/payment/domain/enums/currency.enum';
 import { CreatePaymentMapper } from 'src/modules/payment/infrastructure/services/youkassa/mappers/createPayment.mapper';
 import { FeatureFlagService } from 'src/modules/features-flag/infrastructure/services/featureFlag.service';
 import { FeatureFlagEnum } from 'src/modules/features-flag/domain/enums/ff.enum';
+import { THREE_DAYS_MS } from '../../domain/constants/threeDaysMs';
 
 @Injectable()
 export class SubscriptionsService {
@@ -37,10 +38,9 @@ export class SubscriptionsService {
     private readonly ffService: FeatureFlagService,
   ) {}
   private readonly SUB_DURATION_MS = 30 * 24 * 60 * 60 * 1000;
-  private readonly THREE_DAYS_MS = 3 * 24 * 60 * 60 * 1000;
 
   /**
-   * Get active subscription by user id and order by started_at descending
+   * Get last active subscription by user id and order by started_at descending
    * @param userId - user id
    * @returns - subscription
    */
@@ -92,7 +92,7 @@ export class SubscriptionsService {
           existingSubscription.current_period_end.getTime() -
           new Date().getTime();
 
-        if (timeLeft > this.THREE_DAYS_MS) {
+        if (timeLeft > THREE_DAYS_MS) {
           throw new BadRequestException(
             'Subscription can be renewed only in last 3 days',
           );
@@ -182,16 +182,5 @@ export class SubscriptionsService {
     const plans = await this.subscriptionPlansRepository.find();
     const subscriptions = await this.getNotCanceledSubscriptions([userId]);
     return this.getPlansMapper.toDto(plans, subscriptions);
-    // return plans.map((plan) => {
-    //   return {
-    //     id: plan.id,
-    //     name: plan.name,
-    //     description: plan.description,
-    //     price: plan.price,
-    //     can_buy: !subscriptions.some(
-    //       (subscription) => subscription.subscription_plan_id === plan.id,
-    //     ),
-    //   };
-    // });
   }
 }

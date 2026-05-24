@@ -18,4 +18,6 @@ export class GetUserByIdResponseDto {
   created_at: Date;
   @ApiProperty({ description: 'The current tier id of the user' })
   current_tier_id: number;
+  @ApiProperty({ description: 'The have active subscription of the user' })
+  haveActiveSubscription: boolean;
 }
