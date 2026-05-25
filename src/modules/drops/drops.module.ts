@@ -11,6 +11,7 @@ import { GetDropsMapper } from './infrastructure/mappers/getDrops.mapper';
 import { ProductFilesEntity } from '../products/domain/entities/productFiles.entity';
 import { ProductsModule } from '../products/products.module';
 import { TiersModule } from '../tiers/tiers.module';
+import { AutoDeactivateDropCron } from './presentation/crons/autoDeactivateDrop.cron';
 @Module({
   imports: [
     TypeOrmModule.forFeature([
@@ -23,7 +24,12 @@ import { TiersModule } from '../tiers/tiers.module';
     ProductsModule,
     TiersModule,
   ],
-  providers: [DropsService, GetDropByIdMapper, GetDropsMapper],
+  providers: [
+    DropsService,
+    GetDropByIdMapper,
+    GetDropsMapper,
+    AutoDeactivateDropCron,
+  ],
   controllers: [DropsController],
 })
 export class DropsModule {}

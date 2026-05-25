@@ -3,9 +3,10 @@ import { DropsEntity } from '../../domain/entities/dtops.entity';
 import {
   BadRequestException,
   Injectable,
+  Logger,
   NotFoundException,
 } from '@nestjs/common';
-import { In, Repository } from 'typeorm';
+import { In, LessThan, Repository } from 'typeorm';
 import {
   GetDropsDto,
   GetDropsResponseWithPageCountDto,
@@ -23,6 +24,7 @@ import { RolesEnum } from 'src/core/enums/roles.enum';
 
 @Injectable()
 export class DropsService {
+  private readonly logger = new Logger(DropsService.name);
   constructor(
     @InjectRepository(DropsEntity)
     private readonly dropsRepository: Repository<DropsEntity>,
@@ -150,5 +152,21 @@ export class DropsService {
     }
     await this.dropsRepository.update(id, updateDropDto);
     return drop;
+  }
+  async autoDeactivateDrop() {
+    try {
+      const drops = await this.dropsRepository.find({
+        where: {
+          is_active: true,
+          ends_at: LessThan(new Date()),
+        },
+      });
+      for (const drop of drops) {
+        await this.dropsRepository.update(drop.id, { is_active: false });
+      }
+      this.logger.log(`${drops.length} drops auto deactivated`);
+    } catch (error) {
+      this.logger.error(error);
+    }
   }
 }
