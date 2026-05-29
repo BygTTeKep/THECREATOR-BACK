@@ -1,4 +1,4 @@
-tiers
+# tiers модуль
 
 Уровни (Initiate / Member / Core / Inner).
 ```

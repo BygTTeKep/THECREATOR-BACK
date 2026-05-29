@@ -1,4 +1,4 @@
-import { DataSource, In, MoreThan, Not, Repository } from 'typeorm';
+import { DataSource, In, MoreThan, Repository } from 'typeorm';
 import { SubscriptionsEntity } from '../../domain/entities/subscriptions.entity';
 import {
   BadRequestException,
@@ -69,7 +69,10 @@ export class SubscriptionsService {
     userIds: string[],
   ): Promise<SubscriptionsEntity[]> {
     return await this.subscriptionsRepository.find({
-      where: { user_id: In(userIds), status: Not('canceled') },
+      where: {
+        user_id: In(userIds),
+        status: In([SubscriptionsStatus.PAST_DUE, SubscriptionsStatus.ACTIVE]),
+      },
       order: { started_at: 'DESC' },
     });
   }
