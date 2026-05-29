@@ -31,4 +31,7 @@ export class OrdersEntity {
 
   @Column({ type: 'varchar', length: 255, nullable: true })
   tracking_number: string;
+
+  @Column({ type: 'varchar', length: 255, nullable: true })
+  delivery_method: string;
 }

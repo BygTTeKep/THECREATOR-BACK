@@ -79,4 +79,8 @@ export class CreateOrderDto {
   @ValidateNested()
   @Type(() => ShippingAddressDto)
   shippingAddress: ShippingAddressDto;
+  @ApiProperty({ description: 'The delivery method of the order' })
+  @IsString()
+  @IsNotEmpty()
+  deliveryMethod: string;
 }

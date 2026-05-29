@@ -17,7 +17,7 @@ export class DeliveryService {
       if (!countryCode) {
         throw new Error('Invalid phone number');
       }
-      const delivery: DeliveryEntity | null | undefined =
+      const delivery: DeliveryEntity[] | null | undefined =
         await this.deliveryRepository
           .createQueryBuilder('delivery')
           .select([
@@ -36,7 +36,7 @@ export class DeliveryService {
             'countries.id = delivery_country.country_id',
           )
           .where('countries.code = :code', { code: countryCode })
-          .getRawOne();
+          .getRawMany();
       if (!delivery) {
         throw new Error('Delivery not found');
       }

@@ -10,6 +10,7 @@ async function bootstrap() {
       process.env.FRONTEND_URL,
       'http://localhost:3000',
       'http://www.thecreator.local',
+      'http://localhost:4000',
     ],
     methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
     allowedHeaders: ['Content-Type', 'Authorization'],

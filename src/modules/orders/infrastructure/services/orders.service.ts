@@ -88,6 +88,7 @@ export class OrdersService {
               total_amount: totalAmount,
               created_at: new Date(),
               drop_id: order.dropId,
+              delivery_method: order.deliveryMethod,
             }),
           );
           const isPaymentForOrdersEnabled =

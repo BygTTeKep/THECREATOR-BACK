@@ -2,6 +2,8 @@ import {
   BadRequestException,
   Injectable,
   UnauthorizedException,
+  Logger,
+  ConflictException,
 } from '@nestjs/common';
 import { JwtService } from '@nestjs/jwt';
 import { LoginRequestDto } from 'src/modules/auth/presentation/dtos/login.dto';
@@ -12,6 +14,7 @@ import { SmsService } from 'src/modules/sms/infrastructure/services/sms.service'
 
 @Injectable()
 export class AuthService {
+  private readonly logger = new Logger(AuthService.name);
   constructor(
     private readonly usersService: UsersService,
     private readonly jwtService: JwtService,
@@ -22,7 +25,7 @@ export class AuthService {
       await this.smsService.sendCode(phone);
       return { message: 'Verification code sent successfully' };
     } catch (error) {
-      console.log(error);
+      this.logger.error(error);
       throw new BadRequestException('Failed to send verification code');
     }
   }
@@ -49,31 +52,47 @@ export class AuthService {
     };
   }
   async register(dto: RegisterRequestDto) {
-    const userByPhone = await this.usersService.findByPhone(dto.phone);
-    if (userByPhone) {
-      throw new BadRequestException('User already exists');
-    }
-    const userByEmail = await this.usersService.findByEmail(dto.email);
-    if (userByEmail) {
-      throw new BadRequestException('User already exists');
-    }
-    const verified = await this.smsService.verifyCode(
-      dto.phone,
-      dto.verificationCode,
-    );
-    if (!verified) {
-      throw new UnauthorizedException('Invalid verification code');
-    }
-    const newUser = await this.usersService.createUser({
-      phone: dto.phone,
-      email: dto.email,
-      verificationCode: dto.verificationCode,
-    });
+    try {
+      const userByPhone = await this.usersService.findByPhone(dto.phone);
+      if (userByPhone) {
+        throw new ConflictException('User already exists');
+      }
+      const userByEmail = await this.usersService.findByEmail(dto.email);
+      if (userByEmail) {
+        throw new ConflictException('User already exists');
+      }
+      const verified = await this.smsService.verifyCode(
+        dto.phone,
+        dto.verificationCode,
+      );
+      if (!verified) {
+        throw new UnauthorizedException('Invalid verification code');
+      }
+      const newUser = await this.usersService.createUser({
+        phone: dto.phone,
+        email: dto.email,
+        verificationCode: dto.verificationCode,
+      });
 
-    const role = newUser.metadata?.role ?? RolesEnum.USER;
-    const token = this.jwtService.sign({ id: newUser.id, role });
-    return {
-      access_token: token,
-    };
+      const role = newUser.metadata?.role ?? RolesEnum.USER;
+      const token = this.jwtService.sign({ id: newUser.id, role });
+      return {
+        access_token: token,
+      };
+    } catch (error) {
+      this.logger.error(error);
+      throw new BadRequestException('Failed to register user');
+    }
+  }
+  async verifyPhoneAndEmail(phone: string, email: string) {
+    const userByPhone = await this.usersService.findByPhone(phone);
+    if (userByPhone) {
+      throw new ConflictException('User already exists');
+    }
+    const userByEmail = await this.usersService.findByEmail(email);
+    if (userByEmail) {
+      throw new ConflictException('User already exists');
+    }
+    return true;
   }
 }
