@@ -13,6 +13,7 @@ import { FeatureFlagModule } from '../features-flag/featureFlag.module';
 import { PaymentModule } from '../payment/payment.module';
 import { ProductVariantsEntity } from '../products/domain/entities/productVariants.entity';
 import { OrderEventsListenerService } from './infrastructure/services/orderEventsListener.service';
+import { GetOrderMapper } from './infrastructure/mappers/getOrder.mapper';
 @Module({
   imports: [
     TypeOrmModule.forFeature([
@@ -33,6 +34,7 @@ import { OrderEventsListenerService } from './infrastructure/services/orderEvent
     CreateOrderMapper,
     OrderEventsListenerService,
     OrderEventsListenerService,
+    GetOrderMapper,
   ],
   exports: [OrdersService],
 })

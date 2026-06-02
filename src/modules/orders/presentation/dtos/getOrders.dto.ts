@@ -1,6 +1,9 @@
 import { ApiProperty } from '@nestjs/swagger';
 import { PaginationDto } from 'src/core/dtos/pagination.dto';
-import { OrderStatusEnum } from '../../domain/enums/ordersStatus.enum';
+import {
+  OrderStatusEnum,
+  OrderStatusTranslations,
+} from '../../domain/enums/ordersStatus.enum';
 import { Type } from 'class-transformer';
 import { ValidateNested } from 'class-validator';
 import { IsNotEmpty } from 'class-validator';
@@ -24,9 +27,9 @@ export class GetOrdersResponseDto {
   id: string;
   @ApiProperty({
     description: 'Order status',
-    example: OrderStatusEnum.PENDING,
+    example: OrderStatusTranslations[OrderStatusEnum.PENDING],
   })
-  status: OrderStatusEnum;
+  status: string;
   @ApiProperty({ description: 'Order total amount', example: 100 })
   total_amount: number;
   @ApiProperty({

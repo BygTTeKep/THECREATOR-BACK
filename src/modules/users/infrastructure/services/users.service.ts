@@ -11,6 +11,7 @@ import { TiersService } from 'src/modules/tiers/infrastructure/services/tiers.se
 import { CreateSubscriptionDto } from 'src/modules/subscriptions/presentation/dtos/createSubscription.dto';
 import { GetUserByIdResponseDto } from '../../presentation/dtos/getUserById.dto';
 import { GetUserByIdMapper } from '../mappers/getUserById.mapper';
+import { getCountryByPhone } from 'src/core/utils/getCountryByPhone';
 
 @Injectable()
 export class UsersService {
@@ -53,7 +54,13 @@ export class UsersService {
     if (!user) {
       throw new NotFoundException('User not found');
     }
-    return this.getUserByIdMapper.toDto(user, !!haveActiveSubscription);
+    const language = getCountryByPhone(user.phone);
+
+    return this.getUserByIdMapper.toDto(
+      user,
+      !!haveActiveSubscription,
+      language ?? 'EN',
+    );
   }
   async updateUser(id: string, user: Partial<UserEntity>): Promise<UserEntity> {
     const existingUser = await this.usersRepository.findOne({ where: { id } });

@@ -48,7 +48,7 @@ import { PaymentModule } from './modules/payment/payment.module';
     }),
     JwtModule.register({
       secret: process.env.JWT_SECRET,
-      signOptions: { expiresIn: '1d' },
+      signOptions: { expiresIn: '7d' },
       global: true,
     }),
     ServeStaticModule.forRoot({

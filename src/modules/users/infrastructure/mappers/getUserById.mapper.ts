@@ -7,6 +7,7 @@ export class GetUserByIdMapper {
   toDto(
     user: UserEntity,
     haveActiveSubscription: boolean,
+    language: string,
   ): GetUserByIdResponseDto {
     return {
       id: user.id,
@@ -18,6 +19,7 @@ export class GetUserByIdMapper {
       created_at: user.created_at,
       current_tier_id: user.current_tier_id ?? 0,
       haveActiveSubscription,
+      language,
     };
   }
 }

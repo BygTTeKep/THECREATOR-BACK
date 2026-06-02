@@ -20,4 +20,6 @@ export class GetUserByIdResponseDto {
   current_tier_id: number;
   @ApiProperty({ description: 'The have active subscription of the user' })
   haveActiveSubscription: boolean;
+  @ApiProperty({ description: 'The language of the user' })
+  language: string;
 }

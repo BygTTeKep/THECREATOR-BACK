@@ -25,6 +25,7 @@ import {
   GetOrdersDto,
   GetOrdersResponseDto,
 } from '../../presentation/dtos/getOrders.dto';
+import { GetOrderMapper } from '../mappers/getOrder.mapper';
 
 @Injectable()
 export class OrdersService {
@@ -41,6 +42,7 @@ export class OrdersService {
     private readonly createPaymentMapper: CreatePaymentMapper,
     @InjectDataSource()
     private readonly dataSource: DataSource,
+    private readonly getOrderMapper: GetOrderMapper,
   ) {}
   async createOrder(
     order: CreateOrderDto,
@@ -205,7 +207,7 @@ export class OrdersService {
   ): Promise<GetOrdersResponseDto[]> {
     const { pagination } = getOrdersDto;
     const { page, limit } = pagination;
-    return this.ordersRepository
+    const orders = await this.ordersRepository
       .createQueryBuilder('orders')
       .select('orders.id', 'id')
       .addSelect('orders.status', 'status')
@@ -218,5 +220,6 @@ export class OrdersService {
       .offset((page - 1) * limit)
       .limit(limit)
       .getRawMany();
+    return orders.map((order) => this.getOrderMapper.toDto(order));
   }
 }
