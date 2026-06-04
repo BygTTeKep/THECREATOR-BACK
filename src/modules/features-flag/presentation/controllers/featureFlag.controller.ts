@@ -1,6 +1,7 @@
 import {
   Body,
   Controller,
+  Delete,
   Get,
   Param,
   ParseIntPipe,
@@ -20,7 +21,16 @@ import { UpdateFeatureFlagDto } from '../dtos/updateFeatureFlag.dto';
 @Controller('feature-flag')
 export class FeatureFlagController {
   constructor(private readonly featureFlagService: FeatureFlagService) {}
-
+  @Get('all')
+  @ApiOperation({ summary: 'Get all feature flags' })
+  @ApiResponse({
+    status: 200,
+    description: 'Returns all feature flags',
+    type: [FeatureFlagEntity],
+  })
+  async getAllFeatureFlags() {
+    return this.featureFlagService.getAllFeatureFlags();
+  }
   @ApiOperation({ summary: 'Create a new feature flag' })
   @ApiBody({ type: CreateFeatureFlagDto })
   @ApiResponse({
@@ -45,15 +55,14 @@ export class FeatureFlagController {
   async getFeatureFlagByName(@Query('name') name: string) {
     return this.featureFlagService.getFeatureFlagByName(name);
   }
+  @Delete('delete/:id')
+  async deleteFFById(@Param('id', ParseIntPipe) id: number) {
+    return this.featureFlagService.deleteFFById(id);
+  }
 
-  @Get('all')
-  @ApiOperation({ summary: 'Get all feature flags' })
-  @ApiResponse({
-    status: 200,
-    description: 'Returns all feature flags',
-    type: [FeatureFlagEntity],
-  })
-  async getAllFeatureFlags() {
-    return this.featureFlagService.getAllFeatureFlags();
+  @UseGuards(AuthGuard, AdminGuard)
+  @Get(':id')
+  async getFFById(@Param('id', ParseIntPipe) id: number) {
+    return this.featureFlagService.getFFById(id);
   }
 }

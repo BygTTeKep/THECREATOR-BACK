@@ -45,4 +45,10 @@ export class FeatureFlagService {
   async getAllFeatureFlags(): Promise<FeatureFlagEntity[]> {
     return this.featureFlagRepository.find();
   }
+  async getFFById(id: number) {
+    return this.featureFlagRepository.findOneBy({ id });
+  }
+  async deleteFFById(id: number) {
+    return this.featureFlagRepository.delete({ id });
+  }
 }
