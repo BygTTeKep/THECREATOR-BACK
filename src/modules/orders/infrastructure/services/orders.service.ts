@@ -1,5 +1,5 @@
 import { OrdersEntity } from '../../domain/entities/orders.entity';
-import { BadRequestException, Injectable } from '@nestjs/common';
+import { BadRequestException, Injectable, Logger } from '@nestjs/common';
 import { InjectDataSource, InjectRepository } from '@nestjs/typeorm';
 import { DataSource, Repository } from 'typeorm';
 import { CreateOrderDto } from '../../presentation/dtos/createOrder.dto';
@@ -26,9 +26,14 @@ import {
   GetOrdersResponseDto,
 } from '../../presentation/dtos/getOrders.dto';
 import { GetOrderMapper } from '../mappers/getOrder.mapper';
+import { GetOrdersAdminDto } from '../../presentation/dtos/getOrderForAdmin.dto';
+import { UpdateOrderDto } from '../../presentation/dtos/updateOrder.dto';
+import { GetOrderByIdResponseDto } from '../../presentation/dtos/getOrderById.dto';
+import { GetOrderByIdMapper } from '../mappers/getOrderById.mapper';
 
 @Injectable()
 export class OrdersService {
+  private readonly logger = new Logger();
   constructor(
     @InjectRepository(OrdersEntity)
     private readonly ordersRepository: Repository<OrdersEntity>,
@@ -43,6 +48,7 @@ export class OrdersService {
     @InjectDataSource()
     private readonly dataSource: DataSource,
     private readonly getOrderMapper: GetOrderMapper,
+    private readonly getOrderByIdMapper: GetOrderByIdMapper,
   ) {}
   async createOrder(
     order: CreateOrderDto,
@@ -221,5 +227,94 @@ export class OrdersService {
       .limit(limit)
       .getRawMany();
     return orders.map((order) => this.getOrderMapper.toDto(order));
+  }
+
+  async getOrdersAdmin(
+    getOrdersAdminDto: GetOrdersAdminDto,
+  ): Promise<GetOrdersResponseDto[]> {
+    const { pagination, filters, sorting } = getOrdersAdminDto;
+    const { page, limit } = pagination;
+    const { status, emails } = filters;
+    const { field, order } = sorting;
+    const ordersQueryBuilder = this.ordersRepository
+      .createQueryBuilder('orders')
+      .select([
+        'orders.id as id',
+        'orders.status as status',
+        'orders.total_amount as total_amount',
+        'orders.created_at as created_at',
+        'orders.drop_id as drop_id',
+        'orders.tracking_number as tracking_number',
+      ])
+      .limit(limit)
+      .offset((page - 1) * limit);
+    if (field) {
+      ordersQueryBuilder.orderBy(`orders.${field}`, order);
+    }
+    if (filters.status) {
+      ordersQueryBuilder.andWhere('orders.status = :status', { status });
+    }
+    if (filters.emails) {
+      ordersQueryBuilder.leftJoin(
+        'users',
+        'users',
+        'users.id = orders.user_id',
+      );
+      ordersQueryBuilder.andWhere('users.email IN (:...emails)', { emails });
+    }
+    const orders = await ordersQueryBuilder.getRawMany();
+    return orders.map((order) => this.getOrderMapper.toDto(order));
+  }
+  async getOrdersAdminDetails(
+    orderId: string,
+  ): Promise<GetOrderByIdResponseDto> {
+    const order = await this.ordersRepository
+      .createQueryBuilder('orders')
+      .select([
+        'orders.id as id',
+        'orders.status as order_status',
+        'orders.total_amount as total_amount',
+        'orders.created_at as created_at',
+        'orders.drop_id as drop_id',
+        'orders.tracking_number as tracking_number',
+        'users.email as email',
+        'users.phone as phone',
+        'users.metadata as metadata',
+        'users.status as user_status',
+        'users.total_months as total_months',
+        'users.current_tier_id as current_tier_id',
+      ])
+      .leftJoin('users', 'users', 'users.id = orders.user_id')
+      .where('orders.id = :orderId', { orderId })
+      .getRawOne();
+    return this.getOrderByIdMapper.toDto(order);
+  }
+  async updateOrder(
+    orderId: string,
+    updateOrderDto: UpdateOrderDto,
+  ): Promise<void> {
+    try {
+      if (Object.keys(updateOrderDto).length < 1) return;
+
+      const updateData: Partial<OrdersEntity> = {};
+
+      if (updateOrderDto.status) {
+        updateData.status = updateOrderDto.status;
+      }
+
+      if (updateOrderDto.tracking_number) {
+        updateData.tracking_number = updateOrderDto.tracking_number;
+      }
+
+      await this.ordersRepository
+        .createQueryBuilder()
+        .update()
+        .set(updateData)
+        .where('id = :id', { id: orderId })
+        .execute();
+    } catch (err) {
+      this.logger.error(err);
+      throw err;
+    }
   }
 }

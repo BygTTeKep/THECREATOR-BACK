@@ -14,6 +14,7 @@ import { PaymentModule } from '../payment/payment.module';
 import { ProductVariantsEntity } from '../products/domain/entities/productVariants.entity';
 import { OrderEventsListenerService } from './infrastructure/services/orderEventsListener.service';
 import { GetOrderMapper } from './infrastructure/mappers/getOrder.mapper';
+import { GetOrderByIdMapper } from './infrastructure/mappers/getOrderById.mapper';
 @Module({
   imports: [
     TypeOrmModule.forFeature([
@@ -35,6 +36,7 @@ import { GetOrderMapper } from './infrastructure/mappers/getOrder.mapper';
     OrderEventsListenerService,
     OrderEventsListenerService,
     GetOrderMapper,
+    GetOrderByIdMapper,
   ],
   exports: [OrdersService],
 })
