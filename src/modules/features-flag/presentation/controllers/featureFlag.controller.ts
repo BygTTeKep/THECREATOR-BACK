@@ -55,6 +55,7 @@ export class FeatureFlagController {
   async getFeatureFlagByName(@Query('name') name: string) {
     return this.featureFlagService.getFeatureFlagByName(name);
   }
+  @UseGuards(AuthGuard, AdminGuard)
   @Delete('delete/:id')
   async deleteFFById(@Param('id', ParseIntPipe) id: number) {
     return this.featureFlagService.deleteFFById(id);
