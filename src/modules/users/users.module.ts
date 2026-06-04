@@ -7,6 +7,7 @@ import { CreateUserMapper } from './infrastructure/mappers/createUser.mapper';
 import { TiersModule } from '../tiers/tiers.module';
 import { SubscriptionsModule } from '../subscriptions/subscriptions.module';
 import { GetUserByIdMapper } from './infrastructure/mappers/getUserById.mapper';
+import { GetUsersMapper } from './infrastructure/mappers/getUsers.mapper';
 
 @Module({
   imports: [
@@ -15,7 +16,12 @@ import { GetUserByIdMapper } from './infrastructure/mappers/getUserById.mapper';
     SubscriptionsModule,
   ],
   controllers: [UsersController],
-  providers: [UsersService, CreateUserMapper, GetUserByIdMapper],
+  providers: [
+    UsersService,
+    CreateUserMapper,
+    GetUserByIdMapper,
+    GetUsersMapper,
+  ],
   exports: [UsersService],
 })
 export class UsersModule {}

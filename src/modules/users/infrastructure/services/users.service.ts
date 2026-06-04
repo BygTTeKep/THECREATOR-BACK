@@ -12,6 +12,11 @@ import { CreateSubscriptionDto } from 'src/modules/subscriptions/presentation/dt
 import { GetUserByIdResponseDto } from '../../presentation/dtos/getUserById.dto';
 import { GetUserByIdMapper } from '../mappers/getUserById.mapper';
 import { getCountryByPhone } from 'src/core/utils/getCountryByPhone';
+import {
+  GetUserDto,
+  GetUserResponseDto,
+} from '../../presentation/dtos/getUser.dto';
+import { GetUsersMapper } from '../mappers/getUsers.mapper';
 
 @Injectable()
 export class UsersService {
@@ -23,6 +28,7 @@ export class UsersService {
     private readonly subscriptionsService: SubscriptionsService,
     private readonly tiersService: TiersService,
     private readonly getUserByIdMapper: GetUserByIdMapper,
+    private readonly getUserMapper: GetUsersMapper,
   ) {}
 
   async getAllActiveUsers(): Promise<UserEntity[]> {
@@ -119,5 +125,35 @@ export class UsersService {
       }
     }
     return result;
+  }
+
+  async getUsersByFilter(dto: GetUserDto): Promise<GetUserResponseDto[]> {
+    const { filters, pagination } = dto;
+    const { limit, page } = pagination;
+    const usersQuery = this.usersRepository
+      .createQueryBuilder()
+      .select([
+        'id',
+        'email',
+        'phone',
+        'status',
+        'total_months',
+        'created_at',
+        'current_tier_id',
+      ])
+      .limit(limit)
+      .offset((page - 1) * limit);
+    if (filters?.emails?.length) {
+      usersQuery.andWhere('email IN (:...emails)', { emails: filters.emails });
+    }
+    if (filters?.phones?.length) {
+      usersQuery.andWhere('phone IN (:...phones)', { phones: filters.phones });
+    }
+    if (filters.status !== null && filters.status !== undefined) {
+      usersQuery.andWhere('status = :status', { status: filters.status });
+    }
+    const users = await usersQuery.getRawMany();
+    const results = this.getUserMapper.toDto(users);
+    return results;
   }
 }
