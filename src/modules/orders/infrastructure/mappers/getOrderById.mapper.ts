@@ -12,6 +12,8 @@ export class GetOrderByIdMapper {
       total_amount: data.total_amount,
       status: OrderStatusTranslations[data.order_status] || 'unknown',
       created_at: data.created_at,
+      delivery_method: data.delivery_method,
+      delivery_type: data.delivery_type,
       user: {
         email: data.email,
         phone: data.phone,

@@ -4,6 +4,7 @@ import {
   OrderStatusTranslations,
 } from '../../domain/enums/ordersStatus.enum';
 import { UserStatus } from 'src/modules/users/domain/enums/userStatus.enum';
+import { DeliveryTypeEnum } from 'src/modules/delivery/domain/enums/deliveryType.enum';
 
 export class UserDto {
   @ApiProperty({ description: 'user metadata' })
@@ -51,4 +52,16 @@ export class GetOrderByIdResponseDto {
 
   @ApiProperty({ description: 'user data', type: UserDto })
   user: UserDto;
+
+  @ApiProperty({
+    description: 'delivery_method',
+  })
+  delivery_method: string;
+
+  @ApiProperty({
+    description: 'delivery_type',
+    example: DeliveryTypeEnum.pvz,
+    enum: DeliveryTypeEnum,
+  })
+  delivery_type: string;
 }

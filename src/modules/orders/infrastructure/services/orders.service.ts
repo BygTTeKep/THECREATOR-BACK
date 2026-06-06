@@ -12,7 +12,6 @@ import {
 import { OrderItemsEntity } from '../../domain/entities/orderItems.entity';
 import { RulesService } from 'src/modules/rules/infrastructure/services/rules.service';
 import { ProductsService } from 'src/modules/products/infrastructure/services/products.service';
-import { TelegramService } from 'src/modules/telegram/infrastructure/services/telegram.service';
 import { UsersService } from 'src/modules/users/infrastructure/services/users.service';
 import { FeatureFlagService } from 'src/modules/features-flag/infrastructure/services/featureFlag.service';
 import { PaymentsService } from 'src/modules/payment/infrastructure/services/payments.service';
@@ -42,7 +41,6 @@ export class OrdersService {
     private readonly createOrderMapper: CreateOrderMapper,
     private readonly productsService: ProductsService,
     private readonly rulesService: RulesService,
-    private readonly telegramService: TelegramService,
     private readonly usersService: UsersService,
     private readonly ffService: FeatureFlagService,
     private readonly paymentService: PaymentsService,
@@ -285,6 +283,8 @@ export class OrdersService {
         'orders.created_at as created_at',
         'orders.drop_id as drop_id',
         'orders.tracking_number as tracking_number',
+        'orders.delivery_type as delivery_type',
+        'orders.delivery_method as delivery_method',
         'users.email as email',
         'users.phone as phone',
         'users.metadata as metadata',
