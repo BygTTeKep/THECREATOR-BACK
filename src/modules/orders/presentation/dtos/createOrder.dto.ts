@@ -8,7 +8,9 @@ import {
   ValidateNested,
   IsPositive,
   Min,
+  IsEnum,
 } from 'class-validator';
+import { DeliveryTypeEnum } from 'src/modules/delivery/domain/enums/deliveryType.enum';
 
 export class CreateOrderProductDto {
   @ApiProperty({ description: 'The ID of the product' })
@@ -83,4 +85,13 @@ export class CreateOrderDto {
   @IsString()
   @IsNotEmpty()
   deliveryMethod: string;
+
+  @ApiProperty({
+    description: 'Тип доставки до двери или пвз',
+    example: DeliveryTypeEnum.pvz,
+    enum: DeliveryTypeEnum,
+  })
+  @IsEnum(DeliveryTypeEnum)
+  @IsNotEmpty()
+  delivery_type: DeliveryTypeEnum;
 }

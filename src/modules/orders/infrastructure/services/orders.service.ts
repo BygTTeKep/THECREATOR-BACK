@@ -30,6 +30,8 @@ import { GetOrdersAdminDto } from '../../presentation/dtos/getOrderForAdmin.dto'
 import { UpdateOrderDto } from '../../presentation/dtos/updateOrder.dto';
 import { GetOrderByIdResponseDto } from '../../presentation/dtos/getOrderById.dto';
 import { GetOrderByIdMapper } from '../mappers/getOrderById.mapper';
+import { EventEmitter2 } from '@nestjs/event-emitter';
+import { TelegramEventsEnum } from 'src/modules/telegram/infrastructure/services/telegramEventsListener.service';
 
 @Injectable()
 export class OrdersService {
@@ -49,6 +51,7 @@ export class OrdersService {
     private readonly dataSource: DataSource,
     private readonly getOrderMapper: GetOrderMapper,
     private readonly getOrderByIdMapper: GetOrderByIdMapper,
+    private readonly eventEmitter: EventEmitter2,
   ) {}
   async createOrder(
     order: CreateOrderDto,
@@ -97,6 +100,7 @@ export class OrdersService {
               created_at: new Date(),
               drop_id: order.dropId,
               delivery_method: order.deliveryMethod,
+              delivery_type: order.delivery_type,
             }),
           );
           const isPaymentForOrdersEnabled =
@@ -127,7 +131,9 @@ export class OrdersService {
           );
           await transactionalEntityManager.save(OrderItemsEntity, orderItems);
           // await transactionalEntityManager.save(OrdersEntity, newOrder);
-          await this.telegramService.sendMessage(`
+          this.eventEmitter.emit(
+            TelegramEventsEnum.ORDER_CREATED,
+            `
             <b>New order created:</b>
             <b>Order ID:</b> ${newOrder.id}
             <b>User ID:</b> ${user.id}
@@ -138,7 +144,9 @@ export class OrdersService {
               <b>sku:</b>${productVariants.map((variant) => variant.sku).join(', ')}
             <b>Total Amount:</b> ${totalAmount}
             <b>Created At:</b> ${newOrder.created_at.toISOString()}
-          `);
+          `,
+          );
+          // await this.telegramService.sendMessage();
 
           // Пересчитываем остатки продуктов
           for (const product of products) {
