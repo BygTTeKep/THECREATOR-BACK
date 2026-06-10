@@ -27,6 +27,9 @@ import { DeliveryModule } from './modules/delivery/delivery.module';
 import { FeatureFlagModule } from './modules/features-flag/featureFlag.module';
 import { EventEmitterModule } from '@nestjs/event-emitter';
 import { PaymentModule } from './modules/payment/payment.module';
+import { NotificationsModule } from './modules/notifications/notifications.module';
+import { QueuesModule } from './modules/queues/queues.module';
+import { BullModule } from '@nestjs/bullmq';
 
 @Module({
   imports: [
@@ -80,6 +83,12 @@ import { PaymentModule } from './modules/payment/payment.module';
       inject: [ConfigService],
       isGlobal: true,
     }),
+    BullModule.forRootAsync({
+      inject: [ConfigService],
+      useFactory: (c: ConfigService) => {
+        return { connection: { url: c.get<string>('REDIS_URL') } };
+      },
+    }),
     TelegramModule,
     UsersModule,
     TiersModule,
@@ -98,6 +107,8 @@ import { PaymentModule } from './modules/payment/payment.module';
       global: true,
     }),
     PaymentModule,
+    NotificationsModule,
+    QueuesModule,
   ],
   controllers: [AppController],
   providers: [AppService],

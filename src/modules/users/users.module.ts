@@ -8,12 +8,15 @@ import { TiersModule } from '../tiers/tiers.module';
 import { SubscriptionsModule } from '../subscriptions/subscriptions.module';
 import { GetUserByIdMapper } from './infrastructure/mappers/getUserById.mapper';
 import { GetUsersMapper } from './infrastructure/mappers/getUsers.mapper';
+import { SubscriptionExpCron } from './presentation/crons/subscrioptionExp.cron';
+import { QueuesModule } from '../queues/queues.module';
 
 @Module({
   imports: [
     TypeOrmModule.forFeature([UserEntity]),
     TiersModule,
     SubscriptionsModule,
+    QueuesModule,
   ],
   controllers: [UsersController],
   providers: [
@@ -21,6 +24,7 @@ import { GetUsersMapper } from './infrastructure/mappers/getUsers.mapper';
     CreateUserMapper,
     GetUserByIdMapper,
     GetUsersMapper,
+    SubscriptionExpCron,
   ],
   exports: [UsersService],
 })

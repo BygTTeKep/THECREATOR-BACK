@@ -12,6 +12,7 @@ import { ProductFilesEntity } from '../products/domain/entities/productFiles.ent
 import { ProductsModule } from '../products/products.module';
 import { TiersModule } from '../tiers/tiers.module';
 import { AutoDeactivateDropCron } from './presentation/crons/autoDeactivateDrop.cron';
+import { QueuesModule } from '../queues/queues.module';
 @Module({
   imports: [
     TypeOrmModule.forFeature([
@@ -23,6 +24,7 @@ import { AutoDeactivateDropCron } from './presentation/crons/autoDeactivateDrop.
     RulesModule,
     ProductsModule,
     TiersModule,
+    QueuesModule,
   ],
   providers: [
     DropsService,
