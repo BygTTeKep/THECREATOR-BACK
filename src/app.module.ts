@@ -30,6 +30,7 @@ import { PaymentModule } from './modules/payment/payment.module';
 import { NotificationsModule } from './modules/notifications/notifications.module';
 import { QueuesModule } from './modules/queues/queues.module';
 import { BullModule } from '@nestjs/bullmq';
+import { SocialMediaModule } from './modules/socialmedia/socialmedia.module';
 
 @Module({
   imports: [
@@ -109,6 +110,7 @@ import { BullModule } from '@nestjs/bullmq';
     PaymentModule,
     NotificationsModule,
     QueuesModule,
+    SocialMediaModule,
   ],
   controllers: [AppController],
   providers: [AppService],
