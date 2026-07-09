@@ -31,6 +31,7 @@ import { NotificationsModule } from './modules/notifications/notifications.modul
 import { QueuesModule } from './modules/queues/queues.module';
 import { BullModule } from '@nestjs/bullmq';
 import { SocialMediaModule } from './modules/socialmedia/socialmedia.module';
+import { StatisticsModule } from './modules/statistics/statistics.module';
 
 @Module({
   imports: [
@@ -111,6 +112,7 @@ import { SocialMediaModule } from './modules/socialmedia/socialmedia.module';
     NotificationsModule,
     QueuesModule,
     SocialMediaModule,
+    StatisticsModule,
   ],
   controllers: [AppController],
   providers: [AppService],
