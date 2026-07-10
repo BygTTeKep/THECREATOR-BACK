@@ -21,10 +21,7 @@ export class StatisticService {
         .createQueryBuilder()
         .insert()
         .values({
-          event_type: dto.event_type,
-          user_id: dto.user_id,
-          page_url: dto.page_url,
-          metadata: dto.metadata,
+          ...dto,
         })
         .execute();
     } catch (err) {

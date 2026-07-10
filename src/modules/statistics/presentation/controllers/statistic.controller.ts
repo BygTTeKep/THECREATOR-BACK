@@ -1,4 +1,4 @@
-import { Body, Controller, Post, Req, UseGuards } from '@nestjs/common';
+import { Body, Controller, Ip, Post, Req, UseGuards } from '@nestjs/common';
 import { StatisticService } from '../../infrastructure/services/statistic.service';
 import { ApiBody, ApiOperation, ApiResponse } from '@nestjs/swagger';
 import {
@@ -20,10 +20,11 @@ export class StatisticsController {
   async createStatistic(
     @Body() body: CreateStatisticReqDto,
     @Req() request: Request,
+    @Ip() ip: string,
   ) {
     const statistic = {
       ...body,
-      ip: request.ip,
+      ip: request.ip ?? ip,
       user_agent: request.headers['user-agent'],
       referer: request.headers.referer,
     };
