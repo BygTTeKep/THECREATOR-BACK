@@ -11,7 +11,7 @@ async function bootstrap() {
       'http://localhost:3000',
       'http://www.thecreator.local',
       'http://localhost:4000',
-      'https://admin.thecreatorstudio.ru/',
+      'https://admin.thecreatorstudio.ru',
     ],
     methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS', 'PATCH'],
     allowedHeaders: ['Content-Type', 'Authorization'],
