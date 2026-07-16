@@ -1,4 +1,9 @@
-import { Column, Entity, PrimaryGeneratedColumn } from 'typeorm';
+import {
+  Column,
+  CreateDateColumn,
+  Entity,
+  PrimaryGeneratedColumn,
+} from 'typeorm';
 
 @Entity('newsletter')
 export class NewsLetterEntity {
@@ -16,4 +21,7 @@ export class NewsLetterEntity {
 
   @Column({ nullable: false })
   user_session_id: string;
+
+  @CreateDateColumn()
+  created_at: Date;
 }

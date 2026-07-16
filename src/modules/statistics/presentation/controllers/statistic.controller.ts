@@ -9,10 +9,14 @@ import { Request } from 'express';
 import { CalculateStatisticReqDto } from '../dtos/calcualteStatistic.dto';
 import { AuthGuard } from 'src/core/guards/auth.guard';
 import { AdminGuard } from 'src/core/guards/admin.guard';
+import { CalculateStatisticService } from '../../infrastructure/services/calculateStatistic.service';
 
 @Controller('statistics')
 export class StatisticsController {
-  constructor(private readonly statService: StatisticService) {}
+  constructor(
+    private readonly statService: StatisticService,
+    private readonly calcStatisticService: CalculateStatisticService,
+  ) {}
 
   @ApiOperation({ summary: 'create statistic' })
   @ApiBody({ type: CreateStatisticReqDto })
@@ -38,6 +42,6 @@ export class StatisticsController {
   @UseGuards(AdminGuard)
   @UseGuards(AuthGuard)
   async calcStatistic(@Body() body: CalculateStatisticReqDto) {
-    return this.statService.calcualteStatistic(body);
+    return this.calcStatisticService.calcualteStatistic(body);
   }
 }

@@ -6,6 +6,7 @@ import { TypeOrmModule } from '@nestjs/typeorm';
 import { NewsLetterEntity } from './domain/entities/newsletter.entity';
 import { UsersModule } from '../users/users.module';
 import { NotificationsControllers } from './presentation/controllers/notification.controller';
+import { NewsletterStatisticService } from './services/newsletterStatistic.service';
 
 @Module({
   imports: [TypeOrmModule.forFeature([NewsLetterEntity]), UsersModule],
@@ -13,6 +14,7 @@ import { NotificationsControllers } from './presentation/controllers/notificatio
     NotificationsService,
     NotificationsProcessor,
     UnisenderEmailNotificationService,
+    NewsletterStatisticService,
   ],
   exports: [],
   controllers: [NotificationsControllers],

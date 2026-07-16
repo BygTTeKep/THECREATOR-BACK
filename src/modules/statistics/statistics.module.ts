@@ -3,10 +3,11 @@ import { StatisticsController } from './presentation/controllers/statistic.contr
 import { StatisticService } from './infrastructure/services/statistic.service';
 import { TypeOrmModule } from '@nestjs/typeorm';
 import { AnalyticsEventsEntity } from './domain/entities/analyticsEvents.entity';
+import { CalculateStatisticService } from './infrastructure/services/calculateStatistic.service';
 
 @Module({
   imports: [TypeOrmModule.forFeature([AnalyticsEventsEntity])],
   controllers: [StatisticsController],
-  providers: [StatisticService],
+  providers: [StatisticService, CalculateStatisticService],
 })
 export class StatisticsModule {}

@@ -10,6 +10,7 @@ import {
 import { DateFilterDto } from 'src/core/dtos/dateFilter.dto';
 import { EventTypeStatisticEnum } from '../../domain/enums/EventType.enum';
 import { Type } from 'class-transformer';
+import { GroupByPeriodEnum } from 'src/core/enums/groupByPeriod.enum';
 export class CalculateStatisticFilterDto {
   @ApiProperty({
     description: 'Date filter',
@@ -43,11 +44,6 @@ export class CalculateStatisticFilterDto {
   @IsOptional()
   onlyAuthUser?: boolean;
 }
-export enum CalculateStatisticGropByEnum {
-  day = 'day',
-  week = 'week',
-  month = 'month',
-}
 
 export class CalculateStatisticReqDto {
   @ApiProperty({ type: CalculateStatisticFilterDto })
@@ -57,12 +53,12 @@ export class CalculateStatisticReqDto {
   filter: CalculateStatisticFilterDto;
 
   @ApiProperty({
-    type: CalculateStatisticGropByEnum,
-    enumName: 'CalculateStatisticGropByEnum',
-    enum: CalculateStatisticGropByEnum,
-    example: CalculateStatisticGropByEnum.day,
+    type: GroupByPeriodEnum,
+    enumName: 'GroupByPeriodEnum',
+    enum: GroupByPeriodEnum,
+    example: GroupByPeriodEnum.day,
   })
   @IsNotEmpty()
-  @IsEnum(CalculateStatisticGropByEnum)
-  groupBy: CalculateStatisticGropByEnum;
+  @IsEnum(GroupByPeriodEnum)
+  groupBy: GroupByPeriodEnum;
 }
