@@ -14,6 +14,7 @@ export class GetOrderByIdMapper {
       created_at: data.created_at,
       delivery_method: data.delivery_method,
       delivery_type: data.delivery_type,
+      order_type: data.order_type,
       user: {
         email: data.email,
         phone: data.phone,

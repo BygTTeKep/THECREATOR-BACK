@@ -1,5 +1,10 @@
 import { Column, Entity, PrimaryGeneratedColumn } from 'typeorm';
 
+export enum DropsTypeEnum {
+  standart = 'standart',
+  preorder = 'preorder',
+}
+
 @Entity('drops')
 export class DropsEntity {
   @PrimaryGeneratedColumn()
@@ -19,4 +24,7 @@ export class DropsEntity {
   tier: number;
   @Column({ default: true })
   is_visible: boolean;
+
+  @Column({ default: DropsTypeEnum.standart, type: 'varchar' })
+  drop_type: DropsTypeEnum;
 }

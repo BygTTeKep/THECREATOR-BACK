@@ -23,7 +23,7 @@ export class SmsService {
     const code = this.generateCode();
     console.log(code);
     // TODO пока вырубил отправку смс
-    await this.sendSms(phone, `Your verification code is ${code}`);
+    // await this.sendSms(phone, `Your verification code is ${code}`);
     await this.cacheManager.set(
       `${this.cacheKey}:${phone}`,
       code,

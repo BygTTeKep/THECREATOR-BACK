@@ -22,6 +22,7 @@ export class GetDropsMapper {
         files: dropFiles.filter(
           (file: DropsFilesEntity) => file.drop_id === drop.id,
         ),
+        drop_type: drop.drop_type,
       })),
     };
   }

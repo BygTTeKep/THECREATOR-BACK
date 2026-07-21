@@ -5,6 +5,7 @@ import {
 } from '../../domain/enums/ordersStatus.enum';
 import { UserStatus } from 'src/modules/users/domain/enums/userStatus.enum';
 import { DeliveryTypeEnum } from 'src/modules/delivery/domain/enums/deliveryType.enum';
+import { OrdersTypeEnum } from '../../domain/enums/ordersType.enum';
 
 export class UserDto {
   @ApiProperty({ description: 'user metadata' })
@@ -64,4 +65,12 @@ export class GetOrderByIdResponseDto {
     enum: DeliveryTypeEnum,
   })
   delivery_type: string;
+
+  @ApiProperty({
+    type: OrdersTypeEnum,
+    enumName: 'OrdersTypeEnum',
+    enum: OrdersTypeEnum,
+    example: OrdersTypeEnum.preorder,
+  })
+  order_type: OrdersTypeEnum;
 }

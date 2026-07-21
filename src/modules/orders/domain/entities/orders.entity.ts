@@ -5,6 +5,7 @@ import {
   PrimaryGeneratedColumn,
 } from 'typeorm';
 import { OrderStatusEnum } from '../enums/ordersStatus.enum';
+import { OrdersTypeEnum } from '../enums/ordersType.enum';
 
 @Entity('orders')
 export class OrdersEntity {
@@ -37,4 +38,7 @@ export class OrdersEntity {
 
   @Column({ type: 'varchar', length: 255, nullable: false })
   delivery_type: string;
+
+  @Column({ type: 'varchar', default: OrdersTypeEnum.standart })
+  order_type: OrdersTypeEnum;
 }

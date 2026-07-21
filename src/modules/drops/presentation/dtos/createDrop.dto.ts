@@ -3,12 +3,14 @@ import { Type } from 'class-transformer';
 import {
   IsArray,
   IsBoolean,
+  IsEnum,
   IsNotEmpty,
   IsNumber,
   IsOptional,
   IsString,
   ValidateNested,
 } from 'class-validator';
+import { DropsTypeEnum } from '../../domain/entities/dtops.entity';
 export class CreateDropRuleDto {
   @ApiProperty({ description: 'The minimum tier id' })
   @IsNotEmpty()
@@ -68,4 +70,14 @@ export class CreateDropDto {
   @IsBoolean()
   @IsNotEmpty()
   is_visible: boolean;
+
+  @ApiProperty({
+    type: DropsTypeEnum,
+    enumName: 'DropsTypeEnum',
+    enum: DropsTypeEnum,
+    example: DropsTypeEnum.preorder,
+  })
+  @IsEnum(DropsTypeEnum)
+  @IsNotEmpty()
+  drop_type: DropsTypeEnum;
 }

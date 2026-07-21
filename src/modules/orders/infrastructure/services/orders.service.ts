@@ -99,6 +99,7 @@ export class OrdersService {
               drop_id: order.dropId,
               delivery_method: order.deliveryMethod,
               delivery_type: order.delivery_type,
+              order_type: order.order_type,
             }),
           );
           const isPaymentForOrdersEnabled =
@@ -227,6 +228,7 @@ export class OrdersService {
       .addSelect('orders.created_at', 'created_at')
       .addSelect('orders.drop_id', 'drop_id')
       .addSelect('orders.tracking_number', 'tracking_number')
+      .addSelect('orders.order_type', 'order_type')
       .where('orders.user_id = :userId', { userId })
       .orderBy('orders.created_at', 'DESC')
       .offset((page - 1) * limit)
@@ -251,6 +253,7 @@ export class OrdersService {
         'orders.created_at as created_at',
         'orders.drop_id as drop_id',
         'orders.tracking_number as tracking_number',
+        'orders.order_type as order_type',
       ])
       .limit(limit)
       .offset((page - 1) * limit);
@@ -285,6 +288,7 @@ export class OrdersService {
         'orders.tracking_number as tracking_number',
         'orders.delivery_type as delivery_type',
         'orders.delivery_method as delivery_method',
+        'orders.order_type as order_type',
         'users.email as email',
         'users.phone as phone',
         'users.metadata as metadata',

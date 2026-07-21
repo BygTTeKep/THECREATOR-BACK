@@ -24,6 +24,7 @@ export class GetDropByIdMapper {
         file_url: file.file_url,
       })),
       products: products,
+      drop_type: drop.drop_type,
     };
   }
 }

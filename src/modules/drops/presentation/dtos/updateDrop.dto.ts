@@ -1,6 +1,7 @@
-import { IsBoolean, IsNumber, IsOptional } from 'class-validator';
+import { IsBoolean, IsEnum, IsNumber, IsOptional } from 'class-validator';
 import { IsString } from 'class-validator';
 import { ApiProperty } from '@nestjs/swagger';
+import { DropsTypeEnum } from '../../domain/entities/dtops.entity';
 
 export class UpdateDropDto {
   @ApiProperty({
@@ -58,4 +59,14 @@ export class UpdateDropDto {
   @IsNumber()
   @IsOptional()
   tier: number;
+
+  @ApiProperty({
+    type: DropsTypeEnum,
+    enumName: 'DropsTypeEnum',
+    enum: DropsTypeEnum,
+    example: DropsTypeEnum.preorder,
+  })
+  @IsEnum(DropsTypeEnum)
+  @IsOptional()
+  type: DropsTypeEnum;
 }
