@@ -4,6 +4,7 @@ import { OnEvent } from '@nestjs/event-emitter';
 
 export enum TelegramEventsEnum {
   ORDER_CREATED = 'order.created',
+  SEND_STATISTIC = 'statistic.send',
 }
 
 @Injectable()
@@ -14,7 +15,23 @@ export class TelegramEventListenerService {
   @OnEvent(TelegramEventsEnum.ORDER_CREATED)
   async sendTgInfo(payload: any) {
     try {
-      await this.tgService.sendMessage(payload);
+      await this.tgService.sendMessage(
+        payload,
+        'HTML',
+        TelegramEventsEnum.ORDER_CREATED,
+      );
+    } catch (err) {
+      this.logger.error(err);
+    }
+  }
+  @OnEvent(TelegramEventsEnum.SEND_STATISTIC)
+  async sendTgStatistic(payload: any) {
+    try {
+      await this.tgService.sendMessage(
+        payload,
+        'MarkdownV2',
+        TelegramEventsEnum.SEND_STATISTIC,
+      );
     } catch (err) {
       this.logger.error(err);
     }
