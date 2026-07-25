@@ -1,7 +1,7 @@
 import { IsBoolean, IsEnum, IsNumber, IsOptional } from 'class-validator';
 import { IsString } from 'class-validator';
 import { ApiProperty } from '@nestjs/swagger';
-import { DropsTypeEnum } from '../../domain/entities/dtops.entity';
+import { DropsTypeEnum } from '../../domain/enums/dropType.enum';
 
 export class UpdateDropDto {
   @ApiProperty({

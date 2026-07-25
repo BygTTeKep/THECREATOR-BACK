@@ -42,7 +42,7 @@ export class DropsService {
   ): Promise<GetDropsResponseWithPageCountDto> {
     const { pagination, filters } = getDropsDto;
     const { page, limit } = pagination;
-    const { is_active, date, tier, drop_type } = filters;
+    const { is_active, date, tier, drop_type, drop_line } = filters;
 
     const query = this.dropsRepository
       .createQueryBuilder('drops')
@@ -55,6 +55,7 @@ export class DropsService {
         'drops.is_active as is_active',
         'drops.tier as tier',
         'drops.drop_type as drop_type',
+        'drops.drop_line as drop_line',
       ]);
     if (user.metadata.role !== RolesEnum.ADMIN) {
       query.where('drops.is_visible = true');
@@ -80,6 +81,9 @@ export class DropsService {
     }
     if (drop_type) {
       query.andWhere('drops.drop_type = :dt', { dt: drop_type });
+    }
+    if (drop_line) {
+      query.andWhere('drops.drop_line = :dl', { dl: drop_line });
     }
     const count = await query.getCount();
     query
@@ -110,6 +114,7 @@ export class DropsService {
         tier: createDropDto.tier,
         is_visible: createDropDto.is_visible ?? true,
         drop_type: createDropDto.drop_type,
+        drop_line: createDropDto.drop_line,
       }),
     );
     await this.rulesService.createRuleForDrop({

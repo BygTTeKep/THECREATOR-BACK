@@ -12,7 +12,8 @@ import {
 import { DateFilterDto } from 'src/core/dtos/dateFilter.dto';
 import { PaginationDto } from 'src/core/dtos/pagination.dto';
 import { GetDropFileResponseDto } from './getDropById.dto';
-import { DropsTypeEnum } from '../../domain/entities/dtops.entity';
+import { DropLineEnum } from '../../domain/enums/dropLine.enum';
+import { DropsTypeEnum } from '../../domain/enums/dropType.enum';
 export class GetDropsFiltersDto {
   @ApiProperty({ description: 'Is active filter', example: true })
   @IsOptional()
@@ -40,6 +41,14 @@ export class GetDropsFiltersDto {
     example: DropsTypeEnum.preorder,
   })
   drop_type: DropsTypeEnum;
+
+  @ApiProperty({
+    type: DropLineEnum,
+    enumName: 'DropLineEnum',
+    enum: DropLineEnum,
+    example: DropLineEnum.limit,
+  })
+  drop_line: DropLineEnum;
 }
 export class GetDropsDto {
   @ApiProperty({
@@ -96,6 +105,14 @@ export class GetDropsResponseDto {
     example: DropsTypeEnum.preorder,
   })
   drop_type: DropsTypeEnum;
+
+  @ApiProperty({
+    type: DropLineEnum,
+    enumName: 'DropLineEnum',
+    enum: DropLineEnum,
+    example: DropLineEnum.limit,
+  })
+  drop_line: DropLineEnum;
 }
 
 export class GetDropsResponseWithPageCountDto {

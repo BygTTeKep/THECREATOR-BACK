@@ -25,6 +25,7 @@ export class GetDropByIdMapper {
       })),
       products: products,
       drop_type: drop.drop_type,
+      drop_line: drop.drop_line,
     };
   }
 }

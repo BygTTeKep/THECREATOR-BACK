@@ -1,9 +1,6 @@
 import { Column, Entity, PrimaryGeneratedColumn } from 'typeorm';
-
-export enum DropsTypeEnum {
-  standart = 'standart',
-  preorder = 'preorder',
-}
+import { DropLineEnum } from '../enums/dropLine.enum';
+import { DropsTypeEnum } from '../enums/dropType.enum';
 
 @Entity('drops')
 export class DropsEntity {
@@ -27,4 +24,9 @@ export class DropsEntity {
 
   @Column({ default: DropsTypeEnum.standart, type: 'varchar' })
   drop_type: DropsTypeEnum;
+
+  // Линия дропа имеется ввиду постоянная линейка
+  // или лимитированая линейка
+  @Column({ type: 'varchar', nullable: false })
+  drop_line: DropLineEnum;
 }

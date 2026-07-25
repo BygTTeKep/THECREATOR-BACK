@@ -10,7 +10,8 @@ import {
   IsString,
   ValidateNested,
 } from 'class-validator';
-import { DropsTypeEnum } from '../../domain/entities/dtops.entity';
+import { DropLineEnum } from '../../domain/enums/dropLine.enum';
+import { DropsTypeEnum } from '../../domain/enums/dropType.enum';
 export class CreateDropRuleDto {
   @ApiProperty({ description: 'The minimum tier id' })
   @IsNotEmpty()
@@ -36,7 +37,7 @@ export class CreateDropDto {
 
   @ApiProperty({ description: 'The starts at of the drop' })
   @IsString()
-  @IsNotEmpty()
+  @IsOptional()
   starts_at: string;
 
   @ApiProperty({ description: 'The ends at of the drop' })
@@ -80,4 +81,8 @@ export class CreateDropDto {
   @IsEnum(DropsTypeEnum)
   @IsNotEmpty()
   drop_type: DropsTypeEnum;
+
+  @IsEnum(DropLineEnum)
+  @IsNotEmpty()
+  drop_line: DropLineEnum;
 }

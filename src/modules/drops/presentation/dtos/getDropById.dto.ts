@@ -1,6 +1,7 @@
 import { ApiProperty } from '@nestjs/swagger';
 import { GetProductResponseDto } from 'src/modules/products/presentation/dtos/getProductResponse.dto';
-import { DropsTypeEnum } from '../../domain/entities/dtops.entity';
+import { DropLineEnum } from '../../domain/enums/dropLine.enum';
+import { DropsTypeEnum } from '../../domain/enums/dropType.enum';
 export class GetDropFileResponseDto {
   @ApiProperty({ description: 'The ID of the file' })
   id: number;
@@ -43,4 +44,12 @@ export class GetDropByIdResponseDto {
     example: DropsTypeEnum.preorder,
   })
   drop_type: DropsTypeEnum;
+
+  @ApiProperty({
+    type: DropLineEnum,
+    enumName: 'DropLineEnum',
+    enum: DropLineEnum,
+    example: DropLineEnum.limit,
+  })
+  drop_line: DropLineEnum;
 }
