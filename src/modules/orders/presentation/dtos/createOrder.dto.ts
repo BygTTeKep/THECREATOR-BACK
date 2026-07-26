@@ -12,6 +12,7 @@ import {
 } from 'class-validator';
 import { DeliveryTypeEnum } from 'src/modules/delivery/domain/enums/deliveryType.enum';
 import { OrdersTypeEnum } from '../../domain/enums/ordersType.enum';
+import { PaymentTypeEnum } from 'src/core/enums/paymentType.enum';
 
 export class CreateOrderProductDto {
   @ApiProperty({ description: 'The ID of the product' })
@@ -105,4 +106,13 @@ export class CreateOrderDto {
   @IsEnum(OrdersTypeEnum)
   @IsNotEmpty()
   order_type: OrdersTypeEnum;
+
+  @ApiProperty({
+    type: PaymentTypeEnum,
+    enumName: 'PaymentTypeEnum',
+    enum: PaymentTypeEnum,
+    example: PaymentTypeEnum.now,
+  })
+  @IsEnum(PaymentTypeEnum)
+  payment_type: PaymentTypeEnum;
 }

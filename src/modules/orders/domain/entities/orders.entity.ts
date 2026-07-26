@@ -6,6 +6,7 @@ import {
 } from 'typeorm';
 import { OrderStatusEnum } from '../enums/ordersStatus.enum';
 import { OrdersTypeEnum } from '../enums/ordersType.enum';
+import { PaymentTypeEnum } from '../../../../core/enums/paymentType.enum';
 
 @Entity('orders')
 export class OrdersEntity {
@@ -41,4 +42,7 @@ export class OrdersEntity {
 
   @Column({ type: 'varchar', default: OrdersTypeEnum.standart })
   order_type: OrdersTypeEnum;
+
+  @Column({ type: 'varchar', nullable: false })
+  payment_type: PaymentTypeEnum;
 }

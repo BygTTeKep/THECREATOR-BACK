@@ -17,6 +17,7 @@ export class DeliveryService {
       if (!countryCode) {
         throw new Error('Invalid phone number');
       }
+      console.log(countryCode);
       const delivery: DeliveryEntity[] | null | undefined =
         await this.deliveryRepository
           .createQueryBuilder('delivery')
@@ -40,6 +41,7 @@ export class DeliveryService {
       if (!delivery) {
         throw new Error('Delivery not found');
       }
+      console.log(delivery);
       return delivery;
     } catch (error) {
       this.logger.error(error);
