@@ -53,7 +53,7 @@ import { StatisticsModule } from './modules/statistics/statistics.module';
     }),
     JwtModule.register({
       secret: process.env.JWT_SECRET,
-      signOptions: { expiresIn: '7d' },
+      signOptions: { expiresIn: '21d' },
       global: true,
     }),
     ServeStaticModule.forRoot({
