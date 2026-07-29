@@ -29,6 +29,6 @@ export class UserEntity {
   @CreateDateColumn()
   created_at: Date;
 
-  @Column({ nullable: true, type: 'smallint' })
+  @Column({ nullable: true, type: 'smallint', default: 1 })
   current_tier_id?: number | null;
 }

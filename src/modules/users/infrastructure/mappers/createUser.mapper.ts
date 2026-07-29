@@ -13,7 +13,7 @@ export class CreateUserMapper {
       total_months: 0,
       metadata: {},
       created_at: new Date(),
-      current_tier_id: null,
+      current_tier_id: 1,
       subscription_id: null,
     };
   }
