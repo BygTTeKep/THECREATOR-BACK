@@ -3,6 +3,7 @@ import { CreateStatisticDto } from '../dtos/createStatistic.dto';
 import { InjectRepository } from '@nestjs/typeorm';
 import { AnalyticsEventsEntity } from '../../domain/entities/analyticsEvents.entity';
 import { Repository } from 'typeorm';
+import { UsersService } from 'src/modules/users/infrastructure/services/users.service';
 
 @Injectable()
 export class StatisticService {
@@ -10,6 +11,7 @@ export class StatisticService {
   constructor(
     @InjectRepository(AnalyticsEventsEntity)
     private readonly analyticRepo: Repository<AnalyticsEventsEntity>,
+    private readonly usersService: UsersService,
   ) {}
 
   async createStatistic(dto: CreateStatisticDto) {
@@ -24,5 +26,9 @@ export class StatisticService {
     } catch (err) {
       this.logger.error(`${err}`);
     }
+  }
+  async getCountRegUsers(): Promise<number> {
+    const count = await this.usersService.getCountRegUsers();
+    return count;
   }
 }

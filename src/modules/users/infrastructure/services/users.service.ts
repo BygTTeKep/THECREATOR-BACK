@@ -156,4 +156,9 @@ export class UsersService {
     const results = this.getUserMapper.toDto(users);
     return results;
   }
+
+  async getCountRegUsers(): Promise<number> {
+    const count = await this.usersRepository.createQueryBuilder().getCount();
+    return count;
+  }
 }
