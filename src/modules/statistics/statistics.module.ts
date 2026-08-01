@@ -5,9 +5,10 @@ import { TypeOrmModule } from '@nestjs/typeorm';
 import { AnalyticsEventsEntity } from './domain/entities/analyticsEvents.entity';
 import { CalculateStatisticService } from './infrastructure/services/calculateStatistic.service';
 import { SendStatisticToTgCron } from './presentation/crons/sendStatisticTg.cron';
+import { UsersModule } from '../users/users.module';
 
 @Module({
-  imports: [TypeOrmModule.forFeature([AnalyticsEventsEntity])],
+  imports: [TypeOrmModule.forFeature([AnalyticsEventsEntity]), UsersModule],
   controllers: [StatisticsController],
   providers: [
     StatisticService,

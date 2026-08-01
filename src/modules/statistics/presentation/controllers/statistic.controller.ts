@@ -1,4 +1,12 @@
-import { Body, Controller, Ip, Post, Req, UseGuards } from '@nestjs/common';
+import {
+  Body,
+  Controller,
+  Get,
+  Ip,
+  Post,
+  Req,
+  UseGuards,
+} from '@nestjs/common';
 import { StatisticService } from '../../infrastructure/services/statistic.service';
 import { ApiBody, ApiOperation, ApiResponse } from '@nestjs/swagger';
 import {
@@ -43,5 +51,11 @@ export class StatisticsController {
   @UseGuards(AuthGuard)
   async calcStatistic(@Body() body: CalculateStatisticReqDto) {
     return this.calcStatisticService.calcualteStatistic(body);
+  }
+
+  @ApiOperation({ summary: 'get count register users' })
+  @Get('countRegUser')
+  async getCountRegUser() {
+    return this.statService.getCountRegUsers();
   }
 }
