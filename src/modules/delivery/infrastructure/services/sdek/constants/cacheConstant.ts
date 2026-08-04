@@ -1,0 +1,1 @@
+export const SDEK_ACCESS_CACHE_KEY = 'SDEK:ACCESSTOKEN';

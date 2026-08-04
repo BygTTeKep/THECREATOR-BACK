@@ -45,4 +45,7 @@ export class OrdersEntity {
 
   @Column({ type: 'varchar', nullable: false })
   payment_type: PaymentTypeEnum;
+
+  @Column({ type: 'jsonb', nullable: false })
+  address: Record<string, any>;
 }

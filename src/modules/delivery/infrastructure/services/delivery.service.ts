@@ -3,6 +3,7 @@ import { getCountryByPhone } from 'src/core/utils/getCountryByPhone';
 import { DeliveryEntity } from '../../domain/entities/delivery.entity';
 import { Repository } from 'typeorm';
 import { InjectRepository } from '@nestjs/typeorm';
+import { SdekService } from './sdek/sdek.service';
 
 @Injectable()
 export class DeliveryService {
@@ -10,6 +11,7 @@ export class DeliveryService {
   constructor(
     @InjectRepository(DeliveryEntity)
     private readonly deliveryRepository: Repository<DeliveryEntity>,
+    private readonly sdekService: SdekService,
   ) {}
   async getDeliveryByUserPhone(phone: string) {
     try {
@@ -46,6 +48,15 @@ export class DeliveryService {
     } catch (error) {
       this.logger.error(error);
       throw new Error('Failed to get delivery by user country');
+    }
+  }
+
+  async getLocationByCityName(cityName: string) {
+    try {
+      return this.sdekService.getLocationByCityName(cityName);
+    } catch (error) {
+      this.logger.error(error);
+      throw new Error('Failed to get location by city name');
     }
   }
 }

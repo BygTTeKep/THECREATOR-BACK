@@ -8,6 +8,7 @@ export class GetOrderMapper {
   toDto(order: OrdersEntity): GetOrdersResponseDto {
     return {
       ...order,
+      address: (order?.address as any) || {},
       status: OrderStatusTranslations[order.status],
     };
   }
