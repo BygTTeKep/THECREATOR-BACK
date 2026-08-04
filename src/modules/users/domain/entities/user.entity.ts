@@ -17,6 +17,9 @@ export class UserEntity {
   @Column()
   phone: string;
 
+  @Column({ select: false })
+  password?: string;
+
   @Column({ default: UserStatus.ACTIVE })
   status: UserStatus;
 

@@ -6,6 +6,7 @@ import { UserStatus } from 'src/modules/users/domain/enums/userStatus.enum';
 export class CreateUserDto {
   email: string;
   phone: string;
+  password: string;
   status: UserStatus;
   total_months: number;
   metadata: Record<string, any>;

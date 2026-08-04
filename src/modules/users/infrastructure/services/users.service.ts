@@ -49,6 +49,15 @@ export class UsersService {
   async findByPhone(phone: string) {
     return this.usersRepository.findOne({ where: { phone } });
   }
+
+  async findByPhoneWithPassword(phone: string) {
+    return this.usersRepository
+      .createQueryBuilder('user')
+      .addSelect('user.password')
+      .where('user.phone = :phone', { phone })
+      .getOne();
+  }
+
   async findByEmail(email: string) {
     return this.usersRepository.findOne({ where: { email } });
   }
