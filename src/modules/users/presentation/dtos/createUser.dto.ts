@@ -1,4 +1,4 @@
-import { IsEmail, IsNotEmpty, IsString } from 'class-validator';
+import { IsEmail, IsNotEmpty, IsString, MinLength } from 'class-validator';
 
 /**
  * DTO для создания пользователя
@@ -6,18 +6,20 @@ import { IsEmail, IsNotEmpty, IsString } from 'class-validator';
  * {
  *   "email": "test@example.com",
  *   "phone": "+79999999999",
- *   "verificationCode": "123456"
+ *   "password": "secret"
  * }
  */
 export class CreateUserRequestDto {
   @IsEmail()
   @IsNotEmpty()
   email: string;
+
   @IsString()
   @IsNotEmpty()
   phone: string;
 
   @IsString()
   @IsNotEmpty()
-  verificationCode: string;
+  @MinLength(6)
+  password: string;
 }

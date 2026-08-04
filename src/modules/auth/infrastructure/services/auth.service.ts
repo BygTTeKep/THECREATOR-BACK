@@ -11,6 +11,8 @@ import { UsersService } from 'src/modules/users/infrastructure/services/users.se
 import { RegisterRequestDto } from '../../presentation/dtos/register.dto';
 import { RolesEnum } from 'src/core/enums/roles.enum';
 import { SmsService } from 'src/modules/sms/infrastructure/services/sms.service';
+import { hashPassword } from 'src/core/utils/password/hashPassword';
+import { comparePassword } from 'src/core/utils/password/comparePassword';
 
 @Injectable()
 export class AuthService {
@@ -30,16 +32,13 @@ export class AuthService {
     }
   }
   async login(dto: LoginRequestDto) {
-    const user = await this.usersService.findByPhone(dto.phone);
-    if (!user) {
-      throw new UnauthorizedException('User not found');
+    const user = await this.usersService.findByPhoneWithPassword(dto.phone);
+    if (!user?.password) {
+      throw new UnauthorizedException('Invalid phone or password');
     }
-    const verified = await this.smsService.verifyCode(
-      dto.phone,
-      dto.verificationCode,
-    );
+    const verified = await comparePassword(dto.password, user.password);
     if (!verified) {
-      throw new UnauthorizedException('Invalid verification code');
+      throw new UnauthorizedException('Invalid phone or password');
     }
     const role = user.metadata?.role ?? RolesEnum.USER;
     const token = this.jwtService.sign({
@@ -61,17 +60,11 @@ export class AuthService {
       if (userByEmail) {
         throw new ConflictException('User already exists');
       }
-      const verified = await this.smsService.verifyCode(
-        dto.phone,
-        dto.verificationCode,
-      );
-      if (!verified) {
-        throw new UnauthorizedException('Invalid verification code');
-      }
+      const hashedPassword = await hashPassword(dto.password);
       const newUser = await this.usersService.createUser({
         phone: dto.phone,
         email: dto.email,
-        verificationCode: dto.verificationCode,
+        password: hashedPassword,
       });
 
       const role = newUser.metadata?.role ?? RolesEnum.USER;
@@ -81,6 +74,12 @@ export class AuthService {
       };
     } catch (error) {
       this.logger.error(error);
+      if (
+        error instanceof ConflictException ||
+        error instanceof UnauthorizedException
+      ) {
+        throw error;
+      }
       throw new BadRequestException('Failed to register user');
     }
   }

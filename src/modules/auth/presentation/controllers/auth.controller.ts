@@ -15,7 +15,7 @@ export class AuthController {
   @ApiOperation({ summary: 'Login user' })
   @ApiResponse({ status: 200, description: 'User logged in' })
   @ApiResponse({ status: 400, description: 'Invalid phone or email' })
-  @ApiResponse({ status: 401, description: 'Invalid verification code' })
+  @ApiResponse({ status: 401, description: 'Invalid phone or password' })
   @ApiBody({ type: LoginRequestDto })
   async login(@Body() dto: LoginRequestDto) {
     return this.authService.login(dto);

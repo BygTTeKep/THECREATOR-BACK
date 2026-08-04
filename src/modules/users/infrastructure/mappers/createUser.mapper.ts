@@ -9,6 +9,7 @@ export class CreateUserMapper {
     return {
       email: dto.email,
       phone: dto.phone,
+      password: dto.password,
       status: UserStatus.ACTIVE,
       total_months: 0,
       metadata: {},
