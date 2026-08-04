@@ -8,6 +8,7 @@ import { Type } from 'class-transformer';
 import { ValidateNested } from 'class-validator';
 import { IsNotEmpty } from 'class-validator';
 import { OrdersTypeEnum } from '../../domain/enums/ordersType.enum';
+import { ShippingAddressDto } from './createOrder.dto';
 
 export class GetOrdersDto {
   @ApiProperty({
@@ -51,4 +52,10 @@ export class GetOrdersResponseDto {
     example: OrdersTypeEnum.preorder,
   })
   order_type: OrdersTypeEnum;
+
+  @ApiProperty({
+    type: ShippingAddressDto,
+    description: 'address',
+  })
+  address: ShippingAddressDto;
 }
