@@ -48,4 +48,7 @@ export class OrdersEntity {
 
   @Column({ type: 'jsonb', nullable: false })
   address: Record<string, any>;
+
+  @Column()
+  id_for_courier_service: string;
 }

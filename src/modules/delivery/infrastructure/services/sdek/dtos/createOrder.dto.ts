@@ -1,4 +1,6 @@
 import { OrderTypeEnum } from '../enums/order/orderType.enum';
+import { PackageRequestDto } from './packageRequest.dto';
+import { RecipientDto } from './recipient.dto';
 
 export class CreateOrderDto {
   type?: OrderTypeEnum;
@@ -39,11 +41,18 @@ export class CreateOrderDto {
   delivery_recipient_cost_adv?: any; //TODO
   sender?: any; //TODO
   seller?: any; //TODO
-  recipient: any; //TODO
+
+  recipient: RecipientDto; //TODO
+
   from_location?: any; //TODO
   to_location?: any; //TODO
   services?: any; //TODO
-  packages?: any; // TODO
+
+  /**
+   * Список упаковок заказа
+   */
+  packages: PackageRequestDto[];
+
   sender_requisites?: any; //TODO
   has_reverse_order?: any; // TODO
   developer_key?: any; // TODO

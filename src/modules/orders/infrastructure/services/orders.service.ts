@@ -1,25 +1,13 @@
 import { OrdersEntity } from '../../domain/entities/orders.entity';
-import { BadRequestException, Injectable, Logger } from '@nestjs/common';
-import { InjectDataSource, InjectRepository } from '@nestjs/typeorm';
-import { DataSource, Repository } from 'typeorm';
+import { Injectable, Logger } from '@nestjs/common';
+import { InjectRepository } from '@nestjs/typeorm';
+import { Repository } from 'typeorm';
 import { CreateOrderDto } from '../../presentation/dtos/createOrder.dto';
 import { UserEntity } from '../../../users/domain/entities/user.entity';
 import { OrderStatusEnum } from '../../domain/enums/ordersStatus.enum';
-import {
-  CreateOrderItemDto,
-  CreateOrderMapper,
-} from '../mappers/createOrder.mapper';
+
 import { OrderItemsEntity } from '../../domain/entities/orderItems.entity';
-import { RulesService } from 'src/modules/rules/infrastructure/services/rules.service';
-import { ProductsService } from 'src/modules/products/infrastructure/services/products.service';
-import { UsersService } from 'src/modules/users/infrastructure/services/users.service';
-import { FeatureFlagService } from 'src/modules/features-flag/infrastructure/services/featureFlag.service';
-import { PaymentsService } from 'src/modules/payment/infrastructure/services/payments.service';
-import { FeatureFlagEnum } from 'src/modules/features-flag/domain/enums/ff.enum';
-import { CreatePaymentMapper } from 'src/modules/payment/infrastructure/services/youkassa/mappers/createPayment.mapper';
-import { PaymentVariantsEnum } from 'src/modules/payment/domain/enums/paymentVariants.enum';
-import { CurrencyEnum } from 'src/modules/payment/domain/enums/currency.enum';
-import { ProductVariantsEntity } from 'src/modules/products/domain/entities/productVariants.entity';
+
 import {
   GetOrdersDto,
   GetOrdersResponseDto,
@@ -29,8 +17,8 @@ import { GetOrdersAdminDto } from '../../presentation/dtos/getOrderForAdmin.dto'
 import { UpdateOrderDto } from '../../presentation/dtos/updateOrder.dto';
 import { GetOrderByIdResponseDto } from '../../presentation/dtos/getOrderById.dto';
 import { GetOrderByIdMapper } from '../mappers/getOrderById.mapper';
-import { EventEmitter2 } from '@nestjs/event-emitter';
-import { TelegramEventsEnum } from 'src/modules/telegram/infrastructure/services/telegramEventsListener.service';
+
+import { CreateOrderService } from './createOrder.service';
 
 @Injectable()
 export class OrdersService {
@@ -38,144 +26,16 @@ export class OrdersService {
   constructor(
     @InjectRepository(OrdersEntity)
     private readonly ordersRepository: Repository<OrdersEntity>,
-    private readonly createOrderMapper: CreateOrderMapper,
-    private readonly productsService: ProductsService,
-    private readonly rulesService: RulesService,
-    private readonly usersService: UsersService,
-    private readonly ffService: FeatureFlagService,
-    private readonly paymentService: PaymentsService,
-    private readonly createPaymentMapper: CreatePaymentMapper,
-    @InjectDataSource()
-    private readonly dataSource: DataSource,
+
     private readonly getOrderMapper: GetOrderMapper,
     private readonly getOrderByIdMapper: GetOrderByIdMapper,
-    private readonly eventEmitter: EventEmitter2,
+    private readonly createOrderService: CreateOrderService,
   ) {}
   async createOrder(
     order: CreateOrderDto,
     user: UserEntity,
   ): Promise<string | null> {
-    try {
-      let returnUrl: string | null = null;
-
-      const canBuy = await this.rulesService.canUserBuyProduct(
-        user,
-        order.dropId,
-      );
-      if (!canBuy) {
-        throw new BadRequestException('You are not allowed to buy this drop');
-      }
-      await this.dataSource.transaction(
-        'SERIALIZABLE',
-        async (transactionalEntityManager) => {
-          // Получаем продукты для заказа
-          const products =
-            await this.productsService.getProductsByDropIdAndProductIds(
-              order.dropId,
-              order.products.map((item) => item.product_id),
-            );
-          const productVariantIds = order.products.map(
-            (item) => item.variant_id,
-          );
-          const productVariants =
-            await this.productsService.getProductVariantsByIds(
-              productVariantIds,
-            );
-          if (productVariants.length === 0) {
-            throw new BadRequestException('Products not found');
-          }
-
-          // Считаем общую стоимость заказа
-          const totalAmount = this.getTotalAmount(order, productVariants);
-
-          // Создаем новый заказ
-          const newOrder = await transactionalEntityManager.save(
-            OrdersEntity,
-            this.ordersRepository.create({
-              user_id: user.id,
-              status: OrderStatusEnum.PENDING,
-              total_amount: totalAmount,
-              created_at: new Date(),
-              drop_id: order.dropId,
-              delivery_method: order.deliveryMethod,
-              delivery_type: order.delivery_type,
-              order_type: order.order_type,
-              payment_type: order.payment_type,
-              address: order.shippingAddress,
-            }),
-          );
-          const isPaymentForOrdersEnabled =
-            await this.ffService.isFeatureFlagActive(
-              FeatureFlagEnum.PAYMENT_FOR_ORDERS,
-            );
-          if (isPaymentForOrdersEnabled) {
-            // Создаем платеж в платежной системе
-            const payment = await this.paymentService
-              .createPaymentFactory(PaymentVariantsEnum.YOUKASSA)
-              .createPayment(
-                this.createPaymentMapper.toYoukassaRequest({
-                  amount: {
-                    value: totalAmount.toString(),
-                    currency: CurrencyEnum.RUB,
-                  },
-                  description: `Payment for the order ${newOrder.id}`,
-                }),
-              );
-            returnUrl = payment.confirmation.confirmation_url;
-          }
-          // Создаем новые заказы для продуктов
-          const orderItems: CreateOrderItemDto[] = this.createOrderMapper.toDto(
-            order,
-            newOrder.id,
-            products,
-            productVariants,
-          );
-          await transactionalEntityManager.save(OrderItemsEntity, orderItems);
-          // await transactionalEntityManager.save(OrdersEntity, newOrder);
-          this.eventEmitter.emit(
-            TelegramEventsEnum.ORDER_CREATED,
-            `
-            <b>New order created:</b>
-            <b>Order ID:</b> ${newOrder.id}
-            <b>User ID:</b> ${user.id}
-            <b>User Phone:</b> ${user.phone}
-            <b>User Email:</b> ${user.email}
-            <b>Products:</b> ${products.map((product) => product.name).join(', ')}, 
-              <b>size:</b>${productVariants.map((variant) => variant.size).join(', ')}, 
-              <b>sku:</b>${productVariants.map((variant) => variant.sku).join(', ')}
-            <b>Total Amount:</b> ${totalAmount}
-            <b>Created At:</b> ${newOrder.created_at.toISOString()}
-          `,
-          );
-          // await this.telegramService.sendMessage();
-
-          // Пересчитываем остатки продуктов
-          for (const product of products) {
-            const quantity = order.products.find(
-              (item) => item.product_id === product.id,
-            )?.quantity;
-            if (!quantity) {
-              continue;
-            }
-            await this.productsService.recalculateStock(
-              transactionalEntityManager,
-              productVariants.map((variant) => variant.id),
-              quantity,
-            );
-          }
-        },
-      );
-      await this.usersService.updateUser(user.id, {
-        metadata: {
-          ...user.metadata,
-          fullName: order.fullName,
-          shippingAddress: order.shippingAddress,
-        },
-      });
-      return returnUrl;
-    } catch (error) {
-      throw new BadRequestException(error.message);
-    }
+    return this.createOrderService.createOrder(order, user);
   }
   async getOrderItemsByProductIds(
     productIds: string[],
@@ -200,22 +60,7 @@ export class OrdersService {
   async updateOrderStatus(orderId: string, status: OrderStatusEnum) {
     await this.ordersRepository.update(orderId, { status });
   }
-  private getTotalAmount(
-    order: CreateOrderDto,
-    productVariants: ProductVariantsEntity[],
-  ): number {
-    // Считаем общую стоимость заказа
-    const totalAmount = productVariants.reduce((acc, product) => {
-      const item = order.products.find(
-        (item) => item.product_id === product.product_id,
-      );
-      if (!item) {
-        return acc;
-      }
-      return acc + product.price * item.quantity;
-    }, 0);
-    return totalAmount;
-  }
+
   async getOrdersByUserId(
     getOrdersDto: GetOrdersDto,
     userId: string,

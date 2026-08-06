@@ -4,6 +4,7 @@ import { DeliveryEntity } from '../../domain/entities/delivery.entity';
 import { Repository } from 'typeorm';
 import { InjectRepository } from '@nestjs/typeorm';
 import { SdekService } from './sdek/sdek.service';
+import { CreateOrderDto } from './sdek/dtos/createOrder.dto';
 
 @Injectable()
 export class DeliveryService {
@@ -57,6 +58,14 @@ export class DeliveryService {
     } catch (error) {
       this.logger.error(error);
       throw new Error('Failed to get location by city name');
+    }
+  }
+  async createOrder(order: CreateOrderDto) {
+    try {
+      return this.sdekService.createOrder(order);
+    } catch (err) {
+      this.logger.error(err);
+      throw new Error(err);
     }
   }
 }
