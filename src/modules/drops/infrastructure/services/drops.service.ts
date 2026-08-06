@@ -38,7 +38,7 @@ export class DropsService {
   ) {}
   async getAllDrops(
     getDropsDto: GetDropsDto,
-    user: UserEntity,
+    user?: UserEntity,
   ): Promise<GetDropsResponseWithPageCountDto> {
     const { pagination, filters } = getDropsDto;
     const { page, limit } = pagination;
@@ -57,7 +57,7 @@ export class DropsService {
         'drops.drop_type as drop_type',
         'drops.drop_line as drop_line',
       ]);
-    if (user.metadata.role !== RolesEnum.ADMIN) {
+    if (user && user.metadata.role !== RolesEnum.ADMIN) {
       query.where('drops.is_visible = true');
     }
 
@@ -133,7 +133,7 @@ export class DropsService {
     }
     return drop;
   }
-  async getDropById(id: number, user: UserEntity) {
+  async getDropById(id: number, user?: UserEntity) {
     const drop = await this.dropsRepository.findOne({ where: { id: id } });
     if (!drop) {
       throw new NotFoundException('Drop not found');
@@ -142,7 +142,9 @@ export class DropsService {
     const files = await this.dropsFilesRepository.find({
       where: { drop_id: id },
     });
-    const canBuy = await this.rulesService.canUserBuyProduct(user, id);
+    const canBuy = user
+      ? await this.rulesService.canUserBuyProduct(user, id)
+      : false;
     return this.getDropByIdMapper.toDto(drop, products, canBuy, files);
   }
   async updateDrop(id: number, updateDropDto: UpdateDropDto) {
