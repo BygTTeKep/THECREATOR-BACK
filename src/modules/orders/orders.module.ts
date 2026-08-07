@@ -16,6 +16,7 @@ import { OrderEventsListenerService } from './infrastructure/services/orderEvent
 import { GetOrderMapper } from './infrastructure/mappers/getOrder.mapper';
 import { GetOrderByIdMapper } from './infrastructure/mappers/getOrderById.mapper';
 import { DeliveryModule } from '../delivery/delivery.module';
+import { CreateOrderService } from './infrastructure/services/createOrder.service';
 @Module({
   imports: [
     TypeOrmModule.forFeature([
@@ -39,6 +40,7 @@ import { DeliveryModule } from '../delivery/delivery.module';
     OrderEventsListenerService,
     GetOrderMapper,
     GetOrderByIdMapper,
+    CreateOrderService
   ],
   exports: [OrdersService],
 })
