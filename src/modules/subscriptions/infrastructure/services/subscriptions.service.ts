@@ -183,7 +183,9 @@ export class SubscriptionsService {
   }
   async getPlans(userId: string) {
     const plans = await this.subscriptionPlansRepository.find();
-    const subscriptions = await this.getNotCanceledSubscriptions([userId]);
+    const subscriptions = userId
+      ? await this.getNotCanceledSubscriptions([userId])
+      : [];
     return this.getPlansMapper.toDto(plans, subscriptions);
   }
 }

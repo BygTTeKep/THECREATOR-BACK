@@ -60,6 +60,6 @@ export class SubscriptionsController {
   })
   @Get('plans')
   async getAllSubscriptions(@AuthUser() user: UserEntity) {
-    return this.subscriptionsService.getPlans(user.id);
+    return this.subscriptionsService.getPlans(user?.id ?? null);
   }
 }
