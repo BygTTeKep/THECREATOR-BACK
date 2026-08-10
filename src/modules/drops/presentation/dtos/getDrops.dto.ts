@@ -113,6 +113,13 @@ export class GetDropsResponseDto {
     example: DropLineEnum.limit,
   })
   drop_line: DropLineEnum;
+
+  @ApiProperty({ description: 'Drop price', example: 100 })
+  @IsNumber()
+  @IsNotEmpty()
+  @Min(0)
+  @Max(1000000)
+  price: number;
 }
 
 export class GetDropsResponseWithPageCountDto {

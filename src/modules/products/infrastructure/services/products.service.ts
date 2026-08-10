@@ -177,4 +177,25 @@ export class ProductsService {
     );
     await this.productVariantsRepository.save(productVariantsToCreate);
   }
+
+  async getProductsByIds(ids: number[]): Promise<ProductsEntity[]> {
+    return this.productsRepository.find({
+      where: { drop_id: In(ids) },
+    });
+  }
+  async getProductsPriceByDropIds(dropIds: number[]): Promise<{ id: string, price: number }[]> {
+    const products = await this.productsRepository.find({
+      where: { drop_id: In(dropIds) },
+    });
+    const productVariants = await this.productVariantsRepository.find({
+      where: { product_id: In(products.map((product) => product.id)) },
+    });
+    const response = products.map((product) => {
+      return {
+        id: product.id,
+        price: productVariants.filter((variant) => variant.product_id === product.id).reduce((acc, variant) => acc + variant.price, 0),
+      };
+    });
+    return response;
+  }
 }
