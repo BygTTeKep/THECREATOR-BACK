@@ -1,4 +1,4 @@
-import { Injectable, UnauthorizedException } from '@nestjs/common';
+import { Injectable, Logger, UnauthorizedException } from '@nestjs/common';
 import { AuthResponseDto } from './dtos/auth.dto';
 import { firstValueFrom } from 'rxjs';
 import { HttpService } from '@nestjs/axios';
@@ -10,6 +10,7 @@ import { SDEK_ACCESS_CACHE_KEY } from './constants/cacheConstant';
 
 @Injectable()
 export class SdekGetAccessTokenService {
+  private readonly logger = new Logger(SdekGetAccessTokenService.name);
   private readonly clientId = this.configService.get<string>('SDEK_CLIENT_ID');
   private readonly clientSecret =
     this.configService.get<string>('SDEK_CLIENT_SECRET');
@@ -21,7 +22,11 @@ export class SdekGetAccessTokenService {
     private readonly httpService: HttpService,
     private readonly cacheManager: Cache,
     private readonly configService: ConfigService,
-  ) {}
+  ) {
+    const baseUrl = this.configService.get<string>('SDEK_BASE_URL');
+
+    this.httpService.axiosRef.defaults.baseURL = baseUrl;
+  }
   /**
    * метод для получения токена sdek
    * он действует 3600 сек или 1 час
@@ -69,11 +74,21 @@ export class SdekGetAccessTokenService {
    * @returns
    */
   async getOrSetAccessToken() {
-    let token = await this.getAccessToken();
-    if (!token) {
-      await this.auth();
+    try {
+      let token = await this.getAccessToken();
+      if (!token) {
+        await this.auth();
+      }
+      token = await this.getAccessToken();
+      return token;
+    } catch (error) {
+      console.log(this.SDEK_ACCESS_TOKEN_CACHE_SECRET);
+      console.log(this.KEY);
+      console.log(this.clientId);
+      console.log(this.clientSecret);
+      console.log(this.grantType);
+      this.logger.error(error);
+      throw 'error';
     }
-    token = await this.getAccessToken();
-    return token;
   }
 }

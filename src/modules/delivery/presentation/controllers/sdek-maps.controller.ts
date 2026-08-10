@@ -3,6 +3,7 @@ import {
   Body,
   Controller,
   Get,
+  Logger,
   Post,
   Query,
   Res,
@@ -17,6 +18,7 @@ import {
 @ApiExcludeController()
 @Controller('delivery/maps')
 export class SdekMapsController {
+  private readonly logger = new Logger(SdekMapsController.name);
   constructor(private readonly sdekMapsWidgetService: SdekMapsWidgetService) {}
 
   @Get('service.php')
@@ -62,7 +64,8 @@ export class SdekMapsController {
           typeof payload === 'string' ? { message: payload } : payload,
         );
       }
-      throw error;
+      this.logger.error(error?.message);
+      throw 'error';
     }
   }
 }

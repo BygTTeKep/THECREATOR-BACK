@@ -10,6 +10,10 @@ export class GetOrderMapper {
       ...order,
       address: (order?.address as any) || {},
       status: OrderStatusTranslations[order.status],
+      planned_delivery_date: order.planned_delivery_date
+        ? new Date(order.planned_delivery_date)
+        : null,
+      tracking_number: order.tracking_number,
     };
   }
 }

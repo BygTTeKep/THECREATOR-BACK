@@ -27,5 +27,6 @@ import { SdekMapsWidgetService } from './infrastructure/services/sdek/sdekMapsWi
     SdekService,
     SdekMapsWidgetService,
   ],
+  exports: [DeliveryService],
 })
 export class DeliveryModule {}

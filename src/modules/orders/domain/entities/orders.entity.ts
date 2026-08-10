@@ -48,4 +48,10 @@ export class OrdersEntity {
 
   @Column({ type: 'jsonb', nullable: false })
   address: Record<string, any>;
+
+  @Column({ type: 'varchar', nullable: true })
+  id_in_courier_service: string;
+
+  @Column({ type: 'timestamp', nullable: true })
+  planned_delivery_date: Date;
 }

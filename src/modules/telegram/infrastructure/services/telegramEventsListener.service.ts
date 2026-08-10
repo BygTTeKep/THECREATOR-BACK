@@ -15,11 +15,11 @@ export class TelegramEventListenerService {
   @OnEvent(TelegramEventsEnum.ORDER_CREATED)
   async sendTgInfo(payload: any) {
     try {
-      await this.tgService.sendMessage(
-        payload,
-        'HTML',
-        TelegramEventsEnum.ORDER_CREATED,
-      );
+      // await this.tgService.sendMessage(
+      //   payload,
+      //   'HTML',
+      //   TelegramEventsEnum.ORDER_CREATED,
+      // );
     } catch (err) {
       this.logger.error(err);
     }
