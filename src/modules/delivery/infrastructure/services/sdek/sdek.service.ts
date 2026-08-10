@@ -9,6 +9,7 @@ import { ConfigService } from '@nestjs/config';
 import { firstValueFrom } from 'rxjs';
 import { CreateOrderDto } from './dtos/createOrder.dto';
 import { SdekGetAccessTokenService } from './sdekGetAccessToken.service';
+import { GetOrderInfoResponseDto } from './dtos/getOrderInfo.dto';
 
 @Injectable()
 export class SdekService {
@@ -44,11 +45,11 @@ export class SdekService {
       }
       return response.data;
     } catch (error) {
-      this.logger.error(error);
+      this.logger.error(error?.response?.data);
       throw new InternalServerErrorException();
     }
   }
-  async createOrder(order: CreateOrderDto) {
+  async createOrder(order: CreateOrderDto): Promise<string> {
     try {
       const accessToken =
         await this.sdekGetAccessTokenService.getOrSetAccessToken();
@@ -56,7 +57,7 @@ export class SdekService {
         this.httpService.post(
           '/orders',
           {
-            order: order,
+            ...order,
           },
           {
             headers: {
@@ -65,11 +66,18 @@ export class SdekService {
           },
         ),
       );
-      if (response.status !== 200) {
+      if (response.status !== 202) {
+        this.logger.error(response.data);
         throw new BadRequestException(response.data?.errors);
       }
-      return response.data;
+      const orderResponse = response.data;
+      const orderId = orderResponse.entity.uuid;
+      return orderId;
     } catch (error) {
+      if (error?.response?.data?.requests) {
+        this.logger.error(error?.response?.data?.requests);
+        throw new Error(error?.response?.data?.requests);
+      }
       this.logger.error(error);
       throw new InternalServerErrorException();
     }
@@ -80,19 +88,22 @@ export class SdekService {
    * @param im_number - Номер заказа в ИС Клиента, по которому необходима информация
    * @returns Информация о заказе
    */
-  async getInfoByOrderNumber(orderNumber: string, im_number?: string) {
+  async getInfoByOrderNumber(
+    orderNumber: string,
+    im_number?: string,
+  ): Promise<GetOrderInfoResponseDto> {
     try {
       const accessToken =
         await this.sdekGetAccessTokenService.getOrSetAccessToken();
       const params = {
-        order_number: orderNumber,
+        cdek_number: orderNumber,
       };
       if (im_number) {
         params['im_number'] = im_number;
       }
+      console.log(params);
       const response = await firstValueFrom(
-        this.httpService.get(`/orders/`, {
-          params,
+        this.httpService.get(`/orders/${orderNumber}`, {
           headers: {
             Authorization: `Bearer ${accessToken}`,
           },
@@ -103,7 +114,7 @@ export class SdekService {
       }
       return response.data;
     } catch (error) {
-      this.logger.error(error);
+      this.logger.error(error?.response?.data);
       throw new InternalServerErrorException();
     }
   }
@@ -129,7 +140,7 @@ export class SdekService {
       }
       return response.data;
     } catch (error) {
-      this.logger.error(error);
+      this.logger.error(error?.response?.data);
       throw new InternalServerErrorException();
     }
   }

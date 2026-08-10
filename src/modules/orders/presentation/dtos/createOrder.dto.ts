@@ -9,6 +9,7 @@ import {
   IsPositive,
   Min,
   IsEnum,
+  IsOptional,
 } from 'class-validator';
 import { DeliveryTypeEnum } from 'src/modules/delivery/domain/enums/deliveryType.enum';
 import { OrdersTypeEnum } from '../../domain/enums/ordersType.enum';
@@ -53,6 +54,20 @@ export class ShippingAddressDto {
   @IsString()
   @IsNotEmpty()
   house: string;
+
+  @ApiProperty({ description: 'position coordinates' })
+  @IsOptional()
+  position?: string[]
+
+  @ApiProperty({ description: 'postal code' })
+  @IsOptional()
+  @IsString()
+  postal_code?: string;
+
+  @ApiProperty({ description: 'address formatted' })
+  @IsOptional()
+  @IsString()
+  formatted?: string;
 }
 
 export class CreateOrderDto {

@@ -10,6 +10,11 @@ export enum ContagentTypeEnum {
   INDIVIDUAL = 'INDIVIDUAL',
 }
 
+export class PhoneDto {
+  number: string;
+  additional?: any;
+}
+
 /**
  * @field name
  * @field phones
@@ -23,7 +28,7 @@ export class RequiredFieldRecipientDto {
   /**
    * Список телефонов. Не более 10 номеров
    */
-  phones: string[];
+  phones: PhoneDto[];
 }
 
 export class RecipientDto extends RequiredFieldRecipientDto {

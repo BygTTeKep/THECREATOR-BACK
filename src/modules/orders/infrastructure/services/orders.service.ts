@@ -17,12 +17,19 @@ import { GetOrdersAdminDto } from '../../presentation/dtos/getOrderForAdmin.dto'
 import { UpdateOrderDto } from '../../presentation/dtos/updateOrder.dto';
 import { GetOrderByIdResponseDto } from '../../presentation/dtos/getOrderById.dto';
 import { GetOrderByIdMapper } from '../mappers/getOrderById.mapper';
-
 import { CreateOrderService } from './createOrder.service';
+import { DeliveryService } from 'src/modules/delivery/infrastructure/services/delivery.service';
 
 @Injectable()
 export class OrdersService {
-  private readonly logger = new Logger();
+  private readonly logger = new Logger(OrdersService.name);
+  private readonly activeOrderStatuses = [
+    OrderStatusEnum.ORDER_IN_TRANSIT,
+    OrderStatusEnum.PAID,
+    OrderStatusEnum.PICKED_UP,
+    OrderStatusEnum.PENDING,
+    OrderStatusEnum.ORDER_DELIVERED,
+  ];
   constructor(
     @InjectRepository(OrdersEntity)
     private readonly ordersRepository: Repository<OrdersEntity>,
@@ -30,12 +37,18 @@ export class OrdersService {
     private readonly getOrderMapper: GetOrderMapper,
     private readonly getOrderByIdMapper: GetOrderByIdMapper,
     private readonly createOrderService: CreateOrderService,
+    private readonly deliveryService: DeliveryService,
   ) {}
   async createOrder(
     order: CreateOrderDto,
     user: UserEntity,
   ): Promise<string | null> {
-    return this.createOrderService.createOrder(order, user);
+    try {
+      return await this.createOrderService.createOrder(order, user);
+    } catch (error) {
+      this.logger.error(error?.response?.data?.message);
+      throw 'error';
+    }
   }
   async getOrderItemsByProductIds(
     productIds: string[],
@@ -78,11 +91,31 @@ export class OrdersService {
       .addSelect('orders.order_type', 'order_type')
       .addSelect('orders.payment_type', 'payment_type')
       .addSelect('orders.address', 'address')
+      .addSelect('orders.id_in_courier_service', 'id_in_courier_service')
       .where('orders.user_id = :userId', { userId })
       .orderBy('orders.created_at', 'DESC')
       .offset((page - 1) * limit)
       .limit(limit)
       .getRawMany();
+    const activeOrders = orders.filter((order) =>
+      this.activeOrderStatuses.includes(order.status as OrderStatusEnum),
+    );
+    const deliveryPromises = activeOrders.map((order) =>
+      this.deliveryService.getDeliveryByOrderId(order.id_in_courier_service),
+    );
+    const deliveries = await Promise.all(deliveryPromises);
+    const deliveryMap = new Map(
+      deliveries.map((delivery) => [delivery.entity?.cdek_number, delivery]),
+    );
+    orders.forEach((order) => {
+      order.planned_delivery_date = deliveryMap.get(
+        order.id_in_courier_service,
+      )?.entity?.planned_delivery_date;
+      order.tracking_number = deliveryMap.get(
+        order.id_in_courier_service,
+      )?.entity?.cdek_number;
+    });
+
     return orders.map((order) => this.getOrderMapper.toDto(order));
   }
 

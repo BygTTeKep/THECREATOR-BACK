@@ -2,6 +2,79 @@ import { OrderTypeEnum } from '../enums/order/orderType.enum';
 import { PackageRequestDto } from './packageRequest.dto';
 import { RecipientDto } from './recipient.dto';
 
+export class ToLocationDto {
+  /**
+   * Строка адреса
+   */
+  address: string;
+  /**
+   * Код населенного пункта СДЭК (метод "Список населенных пунктов")
+   */
+  code?: number;
+
+  /**
+   * Идентификатор города в ИС СДЭК
+   */
+  city_uuid?: string;
+
+  /**
+   * Название населенного пункта
+   */
+  city?: string;
+
+  /**
+   * Идентификатор ФИАС населенного пункта
+   */
+  fias_guid?: string;
+
+  /**
+   * Код страны в формате ISO_3166-1_alpha-2 (по умолчанию "RU")
+   */
+  country_code?: string;
+
+  /**
+   * Название страны населенного пункта
+   */
+  country?: string;
+  /**
+   * Название региона
+   */
+  region?: string;
+  /**
+   * Код региона СДЭК (см. метод "Список регионов")
+   */
+  region_code?: number;
+  /**
+   * Уникальный идентификатор ФИАС региона населенного пункта
+   */
+  fias_region_guid?: string;
+  /**
+   * Название района региона
+   */
+  sub_region?: string;
+  /**
+   * Долгота
+   */
+  longitude?: number;
+  /**
+   * Широта
+   */
+  latitude?: number;
+  /**
+   * Часовой пояс населенного пункта
+   */
+  time_zone?: any;
+  /**
+   * Ограничение на сумму наложенного платежа в населенном пункте
+   */
+  payment_limit?: number;
+
+  /**
+   * Почтовый индекс
+   */
+  postal_code?: string;
+}
+
 export class CreateOrderDto {
   type?: OrderTypeEnum;
   additional_order_types?: any; //TODO
@@ -18,7 +91,7 @@ export class CreateOrderDto {
   /**
    * Код тарифа
    */
-  tariff_code: any;
+  tariff_code: number;
   /**
    * Комментарий к заказу
    */
@@ -45,7 +118,7 @@ export class CreateOrderDto {
   recipient: RecipientDto; //TODO
 
   from_location?: any; //TODO
-  to_location?: any; //TODO
+  to_location?: ToLocationDto; //TODO
   services?: any; //TODO
 
   /**

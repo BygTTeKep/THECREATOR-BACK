@@ -40,7 +40,7 @@ import { CreateOrderService } from './infrastructure/services/createOrder.servic
     OrderEventsListenerService,
     GetOrderMapper,
     GetOrderByIdMapper,
-    CreateOrderService
+    CreateOrderService,
   ],
   exports: [OrdersService],
 })

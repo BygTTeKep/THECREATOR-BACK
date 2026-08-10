@@ -88,8 +88,8 @@ export class SdekMapsWidgetService {
       );
       return this.toResult(response);
     } catch (error) {
-      this.logger.error(error);
-      throw error;
+      this.logger.error(error?.message);
+      throw 'error';
     }
   }
 
@@ -109,8 +109,8 @@ export class SdekMapsWidgetService {
       );
       return this.toResult(response);
     } catch (error) {
-      this.logger.error(error);
-      throw error;
+      this.logger.error(error?.message);
+      throw 'error';
     }
   }
 }

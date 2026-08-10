@@ -1,4 +1,4 @@
-import { BadRequestException, Injectable } from '@nestjs/common';
+import { BadRequestException, Injectable, Logger } from '@nestjs/common';
 import { InjectDataSource, InjectRepository } from '@nestjs/typeorm';
 import { DataSource, Repository } from 'typeorm';
 import { OrdersEntity } from '../../domain/entities/orders.entity';
@@ -27,9 +27,13 @@ import { OrderItemsEntity } from '../../domain/entities/orderItems.entity';
 import { TelegramEventsEnum } from 'src/modules/telegram/infrastructure/services/telegramEventsListener.service';
 import { ProductVariantsEntity } from 'src/modules/products/domain/entities/productVariants.entity';
 import { ProductsEntity } from 'src/modules/products/domain/entities/product.entity';
+import { DeliveryTypeEnum } from 'src/modules/delivery/domain/enums/deliveryType.enum';
+import { CreateOrderDto as SdekCreateOrderDto } from 'src/modules/delivery/infrastructure/services/sdek/dtos/createOrder.dto';
+import { SdekTarif } from 'src/modules/delivery/infrastructure/services/sdek/enums/sdekTarif.enum';
 
 @Injectable()
 export class CreateOrderService {
+  private readonly logger = new Logger(CreateOrderService.name);
   constructor(
     @InjectRepository(OrdersEntity)
     private readonly ordersRepository: Repository<OrdersEntity>,
@@ -51,7 +55,7 @@ export class CreateOrderService {
     user: UserEntity,
   ): Promise<string | null> {
     try {
-      let returnUrl: string | null = null;
+      const returnUrl: string | null = null;
 
       const canBuy = await this.rulesService.canUserBuyProduct(
         user,
@@ -79,14 +83,8 @@ export class CreateOrderService {
           if (productVariants.length === 0) {
             throw new BadRequestException('Products not found');
           }
-
           // Считаем общую стоимость заказа
           const totalAmount = this.getTotalAmount(order, productVariants);
-
-          // Создаем заказ в СДЭК
-          const orderInCourierService = await this.createOrderInCourierService(order, productVariants, user, products, totalAmount);
-
-          // Создаем новый заказ
           const newOrder = await transactionalEntityManager.save(
             OrdersEntity,
             this.ordersRepository.create({
@@ -102,10 +100,25 @@ export class CreateOrderService {
               address: order.shippingAddress,
             }),
           );
-          const paymentUrl = await this.createPaymentInPaymentSystem(newOrder.id, totalAmount);
-          if (paymentUrl) {
-            returnUrl = paymentUrl;
-          }
+          // Создаем заказ в СДЭК
+          const orderInCourierService = await this.createOrderInCourierService(
+            order,
+            newOrder.id,
+            productVariants,
+            user,
+            products,
+            totalAmount,
+          );
+
+          await transactionalEntityManager.update(OrdersEntity, newOrder.id, {
+            id_in_courier_service: orderInCourierService,
+          });
+          // Создаем новый заказ
+
+          // const paymentUrl = await this.createPaymentInPaymentSystem(newOrder.id, totalAmount);
+          // if (paymentUrl) {
+          //   returnUrl = paymentUrl;
+          // }
           // Создаем новые заказы для продуктов
           const orderItems: CreateOrderItemDto[] = this.createOrderMapper.toDto(
             order,
@@ -114,7 +127,6 @@ export class CreateOrderService {
             productVariants,
           );
           await transactionalEntityManager.save(OrderItemsEntity, orderItems);
-          // await transactionalEntityManager.save(OrdersEntity, newOrder);
           this.eventEmitter.emit(
             TelegramEventsEnum.ORDER_CREATED,
             `
@@ -130,7 +142,6 @@ export class CreateOrderService {
             <b>Created At:</b> ${newOrder.created_at.toISOString()}
           `,
           );
-          // await this.telegramService.sendMessage();
 
           // Пересчитываем остатки продуктов
           for (const product of products) {
@@ -176,73 +187,125 @@ export class CreateOrderService {
     }, 0);
     return totalAmount;
   }
+  /**
+   * Создает заказ в СДЭК
+   * @param order - Заказ
+   * @param productVariants - Варианты продуктов
+   * @param user - Пользователь
+   * @param products - Продукты
+   * @param totalAmount - Общая стоимость заказа
+   * @returns ID заказа в СДЭК
+   */
   private async createOrderInCourierService(
     order: CreateOrderDto,
+    orderId: string,
     productVariants: ProductVariantsEntity[],
     user: UserEntity,
     products: ProductsEntity[],
     totalAmount: number,
   ): Promise<string> {
-    // Создаем заказ в СДЭК
-    const orderInCourierService = await this.deliveryService.createOrder({
+    const packages = products.map((product) => {
+      const metadata = product.metadata; //TODO: при создании продукта добавлять metadata
+      const variant = productVariants.filter(
+        (variant) => variant.product_id === product.id,
+      );
+      if (variant.length === 0) {
+        throw new BadRequestException('Variant not found');
+      }
+      return {
+        number: product.id,
+        weight: metadata.weight,
+        length: metadata.length,
+        width: metadata.width,
+        height: metadata.height,
+        items: variant.map((variant) => ({
+          name: product.name,
+          ware_key: variant.sku,
+          payment: {
+            value:
+              order.payment_type === PaymentTypeEnum.now ? variant.price : 0,
+          },
+          weight: metadata.weight,
+          amount: totalAmount,
+          cost: variant.price,
+        })),
+      };
+    });
+    const data: SdekCreateOrderDto = {
       type: OrderTypeEnum.ONLINE_STORE,
-      tariff_code: '',
+      number: orderId,
+      tariff_code: this.getTariffCode(order.delivery_type),
       recipient: {
-        phones: [user.phone],
+        phones: [{ number: user.phone }],
         name: order.fullName,
         contragent_type: ContagentTypeEnum.INDIVIDUAL,
       },
-      packages: products.map((product) => {
-        const metadata = product.metadata; //TODO: при создании продукта добавлять metadata
-        const variant = productVariants.filter(
-          (variant) => variant.product_id === product.id,
-        );
-        if (variant.length === 0) {
-          throw new BadRequestException('Variant not found');
-        }
-        return {
-          number: product.id,
-          weight: metadata.weight,
-          length: metadata.length,
-          width: metadata.width,
-          height: metadata.height,
-          items: variant.map((variant) => ({
-            name: product.name,
-            ware_key: variant.sku,
-            payment: {
-              value:
-                order.payment_type === PaymentTypeEnum.now ? variant.price : 0,
-            },
-            weight: metadata.weight,
-            amount: totalAmount,
-            cost: variant.price,
-          })),
-        };
-      }),
-    });
+      packages,
+      shipment_point: order.shippingAddress.house, //TODO: поменять на место куда я буду привозить
+    };
+    if (order.delivery_type === DeliveryTypeEnum.pvz) {
+      data.delivery_point = order.shippingAddress.house;
+    } else if (order.delivery_type === DeliveryTypeEnum.by_courier) {
+      let formattedAddress = '';
+      if (order.shippingAddress.formatted) {
+        formattedAddress = order.shippingAddress.formatted;
+      } else {
+        formattedAddress = order.shippingAddress.street +
+        ' ' +
+        order.shippingAddress.house +
+        ' ' +
+        order.shippingAddress.city +
+        ' ' +
+        order.shippingAddress.country;
+      }
+      data.to_location = {
+        address: formattedAddress,
+      };
+      if (order.shippingAddress.position) {
+        data.to_location.latitude = Number(order.shippingAddress.position[0]);
+        data.to_location.longitude = Number(order.shippingAddress.position[1]);
+      }
+      if (order.shippingAddress.postal_code) {
+        data.to_location.postal_code = order.shippingAddress.postal_code;
+      }
+    }
+    // Создаем заказ в СДЭК
+    const orderInCourierService = await this.deliveryService.createOrder(data);
     return orderInCourierService;
   }
-  private async createPaymentInPaymentSystem(newOrderId: string, totalAmount: number): Promise<string | null> {
-    const isPaymentForOrdersEnabled =
-    await this.ffService.isFeatureFlagActive(
+  //TODO включить платежи для заказов
+  private async createPaymentInPaymentSystem(
+    newOrderId: string,
+    totalAmount: number,
+  ): Promise<string | null> {
+    const isPaymentForOrdersEnabled = await this.ffService.isFeatureFlagActive(
       FeatureFlagEnum.PAYMENT_FOR_ORDERS,
     );
-  if (isPaymentForOrdersEnabled) {
-    // Создаем платеж в платежной системе
-    const payment = await this.paymentService
-      .createPaymentFactory(PaymentVariantsEnum.YOUKASSA)
-      .createPayment(
-        this.createPaymentMapper.toYoukassaRequest({
-          amount: {
-            value: totalAmount.toString(),
-            currency: CurrencyEnum.RUB,
-          },
-          description: `Payment for the order ${newOrderId}`,
-        }),
-      );
-    return payment.confirmation.confirmation_url;
+    if (isPaymentForOrdersEnabled) {
+      // Создаем платеж в платежной системе
+      const payment = await this.paymentService
+        .createPaymentFactory(PaymentVariantsEnum.YOUKASSA)
+        .createPayment(
+          this.createPaymentMapper.toYoukassaRequest({
+            amount: {
+              value: totalAmount.toString(),
+              currency: CurrencyEnum.RUB,
+            },
+            description: `Payment for the order ${newOrderId}`,
+          }),
+        );
+      return payment.confirmation.confirmation_url;
+    }
+    return null;
   }
-  return null;
+  private getTariffCode(deliveryType: DeliveryTypeEnum): SdekTarif {
+    switch (deliveryType) {
+      case DeliveryTypeEnum.pvz:
+        return SdekTarif.PVZ;
+      case DeliveryTypeEnum.by_courier:
+        return SdekTarif.COURIER;
+      default:
+        throw new BadRequestException('Invalid delivery type');
+    }
   }
-  
 }

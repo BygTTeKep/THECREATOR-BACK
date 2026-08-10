@@ -5,14 +5,18 @@ import { Repository } from 'typeorm';
 import { InjectRepository } from '@nestjs/typeorm';
 import { SdekService } from './sdek/sdek.service';
 import { CreateOrderDto } from './sdek/dtos/createOrder.dto';
+import { Cache } from '@nestjs/cache-manager';
+import { GetOrderInfoResponseDto } from './sdek/dtos/getOrderInfo.dto';
 
 @Injectable()
 export class DeliveryService {
   private readonly logger = new Logger(DeliveryService.name);
+  private readonly deliveryCacheTtl = 60 * 60 * 24 * 1000; // 24 hours
   constructor(
     @InjectRepository(DeliveryEntity)
     private readonly deliveryRepository: Repository<DeliveryEntity>,
     private readonly sdekService: SdekService,
+    private readonly cacheService: Cache,
   ) {}
   async getDeliveryByUserPhone(phone: string) {
     try {
@@ -20,7 +24,6 @@ export class DeliveryService {
       if (!countryCode) {
         throw new Error('Invalid phone number');
       }
-      console.log(countryCode);
       const delivery: DeliveryEntity[] | null | undefined =
         await this.deliveryRepository
           .createQueryBuilder('delivery')
@@ -65,7 +68,26 @@ export class DeliveryService {
       return this.sdekService.createOrder(order);
     } catch (err) {
       this.logger.error(err);
-      throw new Error(err);
+      throw new Error('Failed to create order');
+    }
+  }
+  async getDeliveryByOrderId(orderId: string) {
+    try {
+      const cachedDelivery = await this.cacheService.get(`delivery:${orderId}`);
+      if (cachedDelivery) {
+        return cachedDelivery as GetOrderInfoResponseDto;
+      }
+      console.log(orderId);
+      const delivery = await this.sdekService.getInfoByOrderNumber(orderId);
+      await this.cacheService.set(
+        `delivery:${orderId}`,
+        delivery,
+        this.deliveryCacheTtl,
+      );
+      return delivery;
+    } catch (error) {
+      this.logger.error(error);
+      throw new Error('Failed to get delivery by order id');
     }
   }
 }
