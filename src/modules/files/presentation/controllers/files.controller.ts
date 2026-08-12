@@ -1,6 +1,8 @@
 import {
   BadRequestException,
+  Body,
   Controller,
+  Get,
   Post,
   UploadedFiles,
   UseGuards,
@@ -12,11 +14,13 @@ import { FilesInterceptor } from '@nestjs/platform-express';
 import { randomUUID } from 'node:crypto';
 import { extname } from 'node:path';
 import { diskStorage } from 'multer';
+import { FilesService } from '../../infrastructure/services/files.service';
+import { GetFileDto } from '../dtos/getFile.dto';
 
 @Controller('files')
 @UseGuards(AuthGuard)
 export class FilesController {
-  constructor() {}
+  constructor(private readonly filesService: FilesService) {}
   @Post('upload')
   @UseInterceptors(
     FilesInterceptor('files', 10, {
@@ -36,11 +40,16 @@ export class FilesController {
     }),
   )
   @UseGuards(AdminGuard)
-  uploadFile(@UploadedFiles() files: Express.Multer.File[]) {
+  async uploadFile(@UploadedFiles() files: Express.Multer.File[]) {
     if (!files) {
       throw new BadRequestException('File is required');
     }
     const urls = files.map((file) => `/uploads/${file.filename}`);
+    await this.filesService.createFiles(urls);
     return urls;
+  }
+  @Post('list')
+  async getFiles(@Body() dto: GetFileDto) {
+    return this.filesService.getFiles(dto);
   }
 }
