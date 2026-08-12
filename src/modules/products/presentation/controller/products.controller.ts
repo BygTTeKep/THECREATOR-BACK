@@ -5,6 +5,7 @@ import { AuthGuard } from 'src/core/guards/auth.guard';
 import { AdminGuard } from 'src/core/guards/admin.guard';
 import { ApiBody, ApiOperation, ApiResponse } from '@nestjs/swagger';
 import { AddVariantsToProductDto } from '../dtos/addVariantsToProduct.dto';
+import { CreateProductValidation } from '../../infrastructure/validations/createProduct.validate';
 
 @Controller('products')
 @UseGuards(AuthGuard)
@@ -21,6 +22,7 @@ export class ProductsController {
   @Post('create')
   @UseGuards(AdminGuard)
   async createProduct(@Body() createProductDto: CreateProductDto) {
+    CreateProductValidation.validate(createProductDto);
     return this.productsService.createProduct(createProductDto);
   }
   @Get(':id')
