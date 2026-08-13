@@ -5,7 +5,10 @@ import { UserEntity } from 'src/modules/users/domain/entities/user.entity';
 import { SubscriptionsService } from '../../infrastructure/services/subscriptions.service';
 import { GetPlansResponseDto } from '../dtos/getPlans.dto';
 import { ApiOperation, ApiResponse } from '@nestjs/swagger';
-import { CreateSubscriptionDto } from '../dtos/createSubscription.dto';
+import {
+  CreateSubscriptionDto,
+  CreateSubscriptionResponseDto,
+} from '../dtos/createSubscription.dto';
 
 @Controller('subscriptions')
 @UseGuards(AuthGuard)
@@ -24,32 +27,36 @@ export class SubscriptionsController {
   @ApiResponse({
     status: 200,
     description: 'Subscription updated successfully',
+    type: CreateSubscriptionResponseDto,
   })
   @Post('update')
   async updateSubscription(
     @AuthUser() user: UserEntity,
     @Body() createSubscriptionDto: CreateSubscriptionDto,
   ) {
-    return this.subscriptionsService.createSubscription(
+    const returnUrl = await this.subscriptionsService.createSubscription(
       user,
       createSubscriptionDto,
     );
+    return { returnUrl };
   }
 
   @ApiOperation({ summary: 'Create a new subscription' })
   @ApiResponse({
     status: 201,
     description: 'Subscription created successfully',
+    type: CreateSubscriptionResponseDto,
   })
   @Post('create')
   async createSubscription(
     @AuthUser() user: UserEntity,
     @Body() createSubscriptionDto: CreateSubscriptionDto,
   ) {
-    return this.subscriptionsService.createSubscription(
+    const returnUrl = await this.subscriptionsService.createSubscription(
       user,
       createSubscriptionDto,
     );
+    return { returnUrl };
   }
 
   @ApiOperation({ summary: 'Get all plans' })

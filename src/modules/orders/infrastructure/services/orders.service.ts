@@ -46,7 +46,11 @@ export class OrdersService {
     try {
       return await this.createOrderService.createOrder(order, user);
     } catch (error) {
-      this.logger.error(error?.response?.data?.message);
+      if (error?.response?.data) {
+        this.logger.error(error?.response?.data?.message);
+      } else {
+        this.logger.error(error);
+      }
       throw 'error';
     }
   }

@@ -94,8 +94,12 @@ export class DropsService {
     const dropFiles = await this.dropsFilesRepository.find({
       where: { drop_id: In(drops.map((drop: any) => drop.id)) },
     });
-    const products = await this.productsService.getProductsByIds(drops.map((drop) => drop.id));
-    const productsPrice = await this.productsService.getProductsPriceByDropIds(drops.map((drop) => drop.id));
+    const products = await this.productsService.getProductsByIds(
+      drops.map((drop) => drop.id),
+    );
+    const productsPrice = await this.productsService.getProductsPriceByDropIds(
+      drops.map((drop) => drop.id),
+    );
     const response = this.getDropsMapper.toDto(
       drops,
       dropFiles,
