@@ -22,23 +22,23 @@ export class TochkaCreatePaymentMapper {
     const purpose =
       type === 'subscription'
         ? 'Покупка подписки на дропы THE CREATOR'
-        : 'Payment for the order';
+        : 'Оплата дропа на сайте THE CREATOR';
     const redirectUrl =
       type === 'subscription'
-        ? 'https://example.com/subscription'
-        : 'https://example.com/order';
+        ? 'https://thecreatorstudio.ru/profile'
+        : 'https://thecreatorstudio.ru/profile';
     const failRedirectUrl =
       type === 'subscription'
-        ? 'https://example.com/subscription/fail'
-        : 'https://example.com/order/fail';
+        ? 'https://thecreatorstudio.ru/profile'
+        : 'https://thecreatorstudio.ru/profile';
     return {
-      customerCode: '1234567ab', //TODO customerCode,
+      customerCode: customerCode,
       amount: amount,
       purpose: purpose,
       paymentMode: [paymentMode],
       redirectUrl: redirectUrl,
       failRedirectUrl: failRedirectUrl,
-      merchantId: '200000000001097',
+      // merchantId: '200000000001097', //TODO merchantId
     };
   }
 }

@@ -1,4 +1,10 @@
-import { Body, Controller, Get, Header, Post, Req } from '@nestjs/common';
+import {
+  BadRequestException,
+  Controller,
+  Get,
+  Post,
+  Req,
+} from '@nestjs/common';
 import { TochkaPaymentService } from '../payment.service';
 import { Request } from 'express';
 
@@ -8,8 +14,19 @@ export class TochkaController {
 
   @Post('webhook/acquiringInternetPayment')
   async handlePaymentStatus(@Req() req: Request) {
-    const jwtToken = typeof req.body === 'string' ? req.body : String(req.body);
-    return this.tochkaPaymentService.handlePaymentStatus(jwtToken);
+    return this.tochkaPaymentService.handlePaymentStatus(
+      this.extractJwt(req.body),
+    );
+  }
+
+  private extractJwt(body: unknown): string {
+    if (typeof body === 'string') {
+      return body.trim();
+    }
+    if (Buffer.isBuffer(body)) {
+      return body.toString('utf8').trim();
+    }
+    throw new BadRequestException('Webhook body must be a JWT string');
   }
 
   @Get('customer-code')
