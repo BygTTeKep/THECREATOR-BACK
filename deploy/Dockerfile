@@ -31,6 +31,7 @@ COPY package*.json ./
 RUN npm ci --omit=dev
 
 COPY --from=builder /app/dist ./dist
+COPY keys ./keys
 
 RUN mkdir -p /app/uploads
 
