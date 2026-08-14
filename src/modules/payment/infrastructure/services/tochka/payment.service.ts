@@ -3,6 +3,7 @@ import { ConfigService } from '@nestjs/config';
 import {
   Injectable,
   InternalServerErrorException,
+  Logger,
   NotFoundException,
 } from '@nestjs/common';
 import { firstValueFrom } from 'rxjs';
@@ -25,9 +26,11 @@ import { GetPaymentStatusTochkaResponseDto } from './dtos/getPaymentStatusRespon
 import { createPublicKey } from 'node:crypto';
 import { readFileSync } from 'node:fs';
 import { isAbsolute, join } from 'node:path';
+import { AxiosError } from 'axios';
 
 @Injectable()
 export class TochkaPaymentService {
+  private readonly logger = new Logger(TochkaPaymentService.name);
   private readonly TOCHKA_BASE_URL: string;
   private readonly TOCHKA_API_KEY: string = 'sandbox.jwt.token';
   private readonly TOCHKA_CUSTOMER_LIST_CACHE_KEY: string =
@@ -84,6 +87,7 @@ export class TochkaPaymentService {
     data: CreatePaymentLinkDto,
     paymentFor: PaymentFor,
   ): Promise<CreatePaymentLinkResponseDto> {
+    try {
     const response = await firstValueFrom(
       this.httpService.post(
         `${this.TOCHKA_BASE_URL}/acquiring/v1.0/payments`,
@@ -103,6 +107,14 @@ export class TochkaPaymentService {
       operation_id: response.data.Data.operationId,
     });
     return response.data;
+  } catch (error) {
+    if (error instanceof AxiosError && error?.response?.data?.requests) {
+      this.logger.error(error?.response?.data?.requests);
+      throw new Error(error?.response?.data?.requests);
+    }
+    this.logger.error(error);
+    throw new InternalServerErrorException();
+  }
   }
 
   async handlePaymentStatus(body: any) {
@@ -117,7 +129,8 @@ export class TochkaPaymentService {
       },
     });
     if (!payment) {
-      throw new NotFoundException('Payment not found');
+      this.logger.error(`Payment not found for operation id: ${response.operationId}`);
+      return;
     }
     payment.status = response.status;
     await this.paymentRepository.save(payment);
@@ -157,8 +170,8 @@ export class TochkaPaymentService {
       const data: GetCustomerListResponseDto =
         response.data as GetCustomerListResponseDto;
       const foundCustomer = data.Data.Customer.find(
-        (customer) => customer.customerType === 'Personal',
-      ); //TODO "Business"
+        (customer) => customer.customerType === 'Business',
+      );
       if (!foundCustomer) {
         throw new NotFoundException('Customer not found');
       }
@@ -169,22 +182,33 @@ export class TochkaPaymentService {
       );
       return foundCustomer.customerCode;
     } catch (err) {
-      throw new InternalServerErrorException(
-        'Failed to get customer list',
-        err,
-      );
+      if (err instanceof AxiosError && err?.response?.data?.requests) {
+        this.logger.error(err?.response?.data?.requests);
+        throw new Error(err?.response?.data?.requests);
+      }
+      this.logger.error(err);
+      throw new InternalServerErrorException();
     }
   }
 
   async getPaymentInfoByOperationId(
     operationId: string,
   ): Promise<GetPaymentStatusTochkaResponseDto> {
+    try {
     const response = await firstValueFrom(
       this.httpService.get(
         `${this.TOCHKA_BASE_URL}/acquiring/v1.0/payments/${operationId}`,
       ),
     );
     return response.data;
+  } catch (error) {
+    if (error instanceof AxiosError && error?.response?.data?.requests) {
+      this.logger.error(error?.response?.data?.requests);
+      throw new Error(error?.response?.data?.requests);
+    }
+    this.logger.error(error);
+    throw new InternalServerErrorException();
+  }
   }
 
   async autoGetInfoLostPayment() {
@@ -226,10 +250,8 @@ export class TochkaPaymentService {
         }
       }
     } catch (error) {
-      throw new InternalServerErrorException(
-        'Failed to get lost payments',
-        error,
-      );
+      this.logger.error(error);
+      throw new InternalServerErrorException();
     }
   }
 }
