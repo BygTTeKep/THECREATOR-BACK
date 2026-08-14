@@ -2,6 +2,7 @@ import {
   BadRequestException,
   Controller,
   Get,
+  HttpCode,
   Post,
   Req,
 } from '@nestjs/common';
@@ -13,6 +14,7 @@ export class TochkaController {
   constructor(private readonly tochkaPaymentService: TochkaPaymentService) {}
 
   @Post('webhook/acquiringInternetPayment')
+  @HttpCode(200)
   async handlePaymentStatus(@Req() req: Request) {
     return this.tochkaPaymentService.handlePaymentStatus(
       this.extractJwt(req.body),
