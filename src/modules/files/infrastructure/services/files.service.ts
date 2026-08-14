@@ -2,7 +2,10 @@ import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
 import { FilesEntity } from '../../domain/entities/files.entity';
 import { Injectable } from '@nestjs/common';
-import { GetFileDto, GetFileResponseDto } from '../../presentation/dtos/getFile.dto';
+import {
+  GetFileDto,
+  GetFileResponseDto,
+} from '../../presentation/dtos/getFile.dto';
 
 @Injectable()
 export class FilesService {

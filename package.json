@@ -46,6 +46,7 @@
     "class-transformer": "^0.5.1",
     "class-validator": "^0.15.1",
     "handlebars": "^4.7.9",
+    "jose": "^6.2.8",
     "libphonenumber-js": "^1.13.0",
     "nodemailer": "^8.0.10",
     "pg": "^8.20.0",

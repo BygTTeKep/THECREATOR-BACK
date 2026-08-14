@@ -14,6 +14,7 @@ import {
 import { DeliveryTypeEnum } from 'src/modules/delivery/domain/enums/deliveryType.enum';
 import { OrdersTypeEnum } from '../../domain/enums/ordersType.enum';
 import { PaymentTypeEnum } from 'src/core/enums/paymentType.enum';
+import { PaymentMode } from 'src/modules/payment/infrastructure/services/tochka/enums/paymentMode.enum';
 
 export class CreateOrderProductDto {
   @ApiProperty({ description: 'The ID of the product' })
@@ -57,7 +58,7 @@ export class ShippingAddressDto {
 
   @ApiProperty({ description: 'position coordinates' })
   @IsOptional()
-  position?: string[]
+  position?: string[];
 
   @ApiProperty({ description: 'postal code' })
   @IsOptional()
@@ -130,4 +131,13 @@ export class CreateOrderDto {
   })
   @IsEnum(PaymentTypeEnum)
   payment_type: PaymentTypeEnum;
+
+  @ApiProperty({
+    type: PaymentMode,
+    enumName: 'PaymentMode',
+    enum: PaymentMode,
+    example: PaymentMode.CARD,
+  })
+  @IsEnum(PaymentMode)
+  payment_mode: PaymentMode;
 }

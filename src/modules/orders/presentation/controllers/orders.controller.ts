@@ -35,7 +35,13 @@ export class OrdersController {
     @Body() createOrderDto: CreateOrderDto,
     @AuthUser() user: UserEntity,
   ) {
-    return await this.ordersService.createOrder(createOrderDto, user);
+    const returnUrl = await this.ordersService.createOrder(
+      createOrderDto,
+      user,
+    );
+    return {
+      returnUrl,
+    };
   }
 
   @ApiOperation({ summary: 'Get all orders by user id' })

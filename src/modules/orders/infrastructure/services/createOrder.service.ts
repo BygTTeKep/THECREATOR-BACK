@@ -1,6 +1,6 @@
 import { BadRequestException, Injectable, Logger } from '@nestjs/common';
 import { InjectDataSource, InjectRepository } from '@nestjs/typeorm';
-import { DataSource, Repository } from 'typeorm';
+import { DataSource, EntityManager, Repository } from 'typeorm';
 import { OrdersEntity } from '../../domain/entities/orders.entity';
 import {
   CreateOrderItemDto,
@@ -30,6 +30,10 @@ import { ProductsEntity } from 'src/modules/products/domain/entities/product.ent
 import { DeliveryTypeEnum } from 'src/modules/delivery/domain/enums/deliveryType.enum';
 import { CreateOrderDto as SdekCreateOrderDto } from 'src/modules/delivery/infrastructure/services/sdek/dtos/createOrder.dto';
 import { SdekTarif } from 'src/modules/delivery/infrastructure/services/sdek/enums/sdekTarif.enum';
+import { TochkaPaymentService } from 'src/modules/payment/infrastructure/services/tochka/payment.service';
+import { PaymentFor } from 'src/modules/payment/domain/enums/paymentFor.enum';
+import { TochkaCreatePaymentMapper } from 'src/modules/payment/infrastructure/services/tochka/mappers/toCreatePayment.mapper';
+import { PaymentMode } from 'src/modules/payment/infrastructure/services/tochka/enums/paymentMode.enum';
 
 @Injectable()
 export class CreateOrderService {
@@ -48,6 +52,7 @@ export class CreateOrderService {
     private readonly dataSource: DataSource,
     private readonly eventEmitter: EventEmitter2,
     private readonly deliveryService: DeliveryService,
+    private readonly tochkaCreatePaymentMapper: TochkaCreatePaymentMapper,
   ) {}
 
   async createOrder(
@@ -55,7 +60,7 @@ export class CreateOrderService {
     user: UserEntity,
   ): Promise<string | null> {
     try {
-      const returnUrl: string | null = null;
+      let returnUrl: string | null = null;
 
       const canBuy = await this.rulesService.canUserBuyProduct(
         user,
@@ -115,10 +120,15 @@ export class CreateOrderService {
           });
           // Создаем новый заказ
 
-          // const paymentUrl = await this.createPaymentInPaymentSystem(newOrder.id, totalAmount);
-          // if (paymentUrl) {
-          //   returnUrl = paymentUrl;
-          // }
+          const paymentUrl = await this.createPaymentInPaymentSystem(
+            newOrder.id,
+            totalAmount,
+            order.payment_mode,
+            transactionalEntityManager,
+          );
+          if (paymentUrl) {
+            returnUrl = paymentUrl;
+          }
           // Создаем новые заказы для продуктов
           const orderItems: CreateOrderItemDto[] = this.createOrderMapper.toDto(
             order,
@@ -250,13 +260,14 @@ export class CreateOrderService {
       if (order.shippingAddress.formatted) {
         formattedAddress = order.shippingAddress.formatted;
       } else {
-        formattedAddress = order.shippingAddress.street +
-        ' ' +
-        order.shippingAddress.house +
-        ' ' +
-        order.shippingAddress.city +
-        ' ' +
-        order.shippingAddress.country;
+        formattedAddress =
+          order.shippingAddress.street +
+          ' ' +
+          order.shippingAddress.house +
+          ' ' +
+          order.shippingAddress.city +
+          ' ' +
+          order.shippingAddress.country;
       }
       data.to_location = {
         address: formattedAddress,
@@ -277,24 +288,42 @@ export class CreateOrderService {
   private async createPaymentInPaymentSystem(
     newOrderId: string,
     totalAmount: number,
+    paymentMode: PaymentMode,
+    transactionalEntityManager: EntityManager,
   ): Promise<string | null> {
     const isPaymentForOrdersEnabled = await this.ffService.isFeatureFlagActive(
       FeatureFlagEnum.PAYMENT_FOR_ORDERS,
     );
     if (isPaymentForOrdersEnabled) {
       // Создаем платеж в платежной системе
-      const payment = await this.paymentService
-        .createPaymentFactory(PaymentVariantsEnum.YOUKASSA)
-        .createPayment(
-          this.createPaymentMapper.toYoukassaRequest({
-            amount: {
-              value: totalAmount.toString(),
-              currency: CurrencyEnum.RUB,
-            },
-            description: `Payment for the order ${newOrderId}`,
-          }),
+      const paymentService =
+        this.paymentService.createPaymentFactory<TochkaPaymentService>(
+          PaymentVariantsEnum.TOCHKA,
         );
-      return payment.confirmation.confirmation_url;
+      const customerCode = await paymentService.getCustomerCode();
+      const payment = await paymentService.createLinkToPayment(
+        this.tochkaCreatePaymentMapper.toTochkaRequest(
+          totalAmount,
+          'order',
+          paymentMode,
+          customerCode,
+        ),
+        PaymentFor.ORDER,
+      );
+      const paymentId = payment?.Data?.operationId || null;
+      const returnUrl = payment?.Data?.paymentLink || null;
+      if (paymentId) {
+        await transactionalEntityManager.update(
+          OrdersEntity,
+          {
+            id: newOrderId,
+          },
+          {
+            payment_id: paymentId,
+          },
+        );
+      }
+      return returnUrl;
     }
     return null;
   }

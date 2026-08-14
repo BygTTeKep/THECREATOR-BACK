@@ -82,12 +82,18 @@ services:
       UNISENDER_API_KEY: ${UNISENDER_API_KEY}
       UNISENDER_API_URL: ${UNISENDER_API_URL}
       THECREATOR_MAIL: ${THECREATOR_MAIL}
+      TOCHKA_API_KEY: ${TOCHKA_API_KEY}
+      TOCHKA_API_URL: ${TOCHKA_API_URL}
+      TOCHKA_WEBHOOK_PUBLIC_KEY_PEM: ${TOCHKA_WEBHOOK_PUBLIC_KEY_PEM}
+    volumes:
+      - uploads_data:/app/uploads
     networks:
       - thecreator-network
 
 volumes:
   postgres_data:
   redis_data:
+  uploads_data:
 
 networks:
   thecreator-network:
