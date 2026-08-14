@@ -22,7 +22,9 @@ import { Cache } from '@nestjs/cache-manager';
 import { GetCustomerListResponseDto } from './dtos/getCustomerList.dto';
 import { JwtService } from '@nestjs/jwt';
 import { GetPaymentStatusTochkaResponseDto } from './dtos/getPaymentStatusResponse.dto';
-import fs from 'fs';
+import { createPublicKey } from 'node:crypto';
+import { readFileSync } from 'node:fs';
+import { isAbsolute, join } from 'node:path';
 
 @Injectable()
 export class TochkaPaymentService {
@@ -56,10 +58,21 @@ export class TochkaPaymentService {
     if (!tochkaWebhookPublicKeyPem) {
       throw new Error('TOCHKA_WEBHOOK_PUBLIC_KEY_PEM is not set');
     }
-    this.TOCHKA_WEBHOOK_PUBLIC_KEY_PEM = fs.readFileSync(
+    this.TOCHKA_WEBHOOK_PUBLIC_KEY_PEM = this.loadPublicKey(
       tochkaWebhookPublicKeyPem,
-      'utf8',
     );
+  }
+
+  private loadPublicKey(value: string): string {
+    const trimmed = value.trim();
+    const pem = trimmed.includes('BEGIN')
+      ? trimmed
+      : readFileSync(
+          isAbsolute(trimmed) ? trimmed : join(process.cwd(), trimmed),
+          'utf8',
+        ).trim();
+    createPublicKey(pem);
+    return pem;
   }
 
   /**
@@ -94,8 +107,8 @@ export class TochkaPaymentService {
 
   async handlePaymentStatus(body: any) {
     const response: GetPaymentStatusTochkaResponseDto =
-      await this.jwtService.verifyAsync(body, {
-        publicKey: this.TOCHKA_WEBHOOK_PUBLIC_KEY_PEM,
+      await this.jwtService.verifyAsync(body.trim(), {
+        secret: this.TOCHKA_WEBHOOK_PUBLIC_KEY_PEM,
         algorithms: ['RS256'],
       });
     const payment = await this.paymentRepository.findOne({
