@@ -1,7 +1,6 @@
 import {
   BadRequestException,
   Controller,
-  Get,
   HttpCode,
   Post,
   Req,
@@ -29,10 +28,5 @@ export class TochkaController {
       return body.toString('utf8').trim();
     }
     throw new BadRequestException('Webhook body must be a JWT string');
-  }
-
-  @Get('customer-code')
-  async getCustomerCode() {
-    return this.tochkaPaymentService.getCustomerCode();
   }
 }

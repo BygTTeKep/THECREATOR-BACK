@@ -34,6 +34,7 @@ import { TochkaPaymentService } from 'src/modules/payment/infrastructure/service
 import { PaymentFor } from 'src/modules/payment/domain/enums/paymentFor.enum';
 import { TochkaCreatePaymentMapper } from 'src/modules/payment/infrastructure/services/tochka/mappers/toCreatePayment.mapper';
 import { PaymentMode } from 'src/modules/payment/infrastructure/services/tochka/enums/paymentMode.enum';
+import { OrdersTypeEnum } from '../../domain/enums/ordersType.enum';
 
 @Injectable()
 export class CreateOrderService {
@@ -106,19 +107,21 @@ export class CreateOrderService {
             }),
           );
           // Создаем заказ в СДЭК
-          const orderInCourierService = await this.createOrderInCourierService(
-            order,
-            newOrder.id,
-            productVariants,
-            user,
-            products,
-            totalAmount,
-          );
+          // Если предзаказ, то руками создаем заказ в СДЭК
+          if (order.order_type !== OrdersTypeEnum.preorder) {
+            const orderInCourierService = await this.createOrderInCourierService(
+              order,
+              newOrder.id,
+              productVariants,
+              user,
+              products,
+              totalAmount,
+            );
+            await transactionalEntityManager.update(OrdersEntity, newOrder.id, {
+              id_in_courier_service: orderInCourierService,
+            });
+          }
 
-          await transactionalEntityManager.update(OrdersEntity, newOrder.id, {
-            id_in_courier_service: orderInCourierService,
-          });
-          // Создаем новый заказ
 
           const paymentUrl = await this.createPaymentInPaymentSystem(
             newOrder.id,
@@ -215,7 +218,7 @@ export class CreateOrderService {
     totalAmount: number,
   ): Promise<string> {
     const packages = products.map((product) => {
-      const metadata = product.metadata; //TODO: при создании продукта добавлять metadata
+      const metadata = product.metadata;
       const variant = productVariants.filter(
         (variant) => variant.product_id === product.id,
       );

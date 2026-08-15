@@ -8,6 +8,7 @@ import { OrderStatusEnum } from '../../domain/enums/ordersStatus.enum';
 import { GetEventsFromYKResponseDto } from 'src/modules/payment/infrastructure/services/youkassa/dtos/getEventsFromYK.dto';
 import { GetPaymentStatusTochkaResponseDto } from 'src/modules/payment/infrastructure/services/tochka/dtos/getPaymentStatusResponse.dto';
 import { TochkaPaymentStatus } from 'src/modules/payment/infrastructure/services/tochka/enums/paymentStatus.enum';
+import { GetStatusWebhookResponseDto } from 'src/modules/delivery/infrastructure/services/sdek/dtos/getStatusWebhook.dto';
 
 export enum OrderEventsEnum {
   ORDER_CREATED = 'order.created',
@@ -36,6 +37,17 @@ function isTochkaPayload(
   );
 }
 
+function isSdekPayload(
+  payload: unknown,
+): payload is GetStatusWebhookResponseDto {
+  return (
+    !!payload &&
+    typeof payload === 'object' &&
+    'code' in payload && 
+    'attributes' in payload
+  );
+}
+
 @Injectable()
 export class OrderEventsListenerService {
   private readonly logger: Logger = new Logger(OrderEventsListenerService.name);
@@ -49,7 +61,7 @@ export class OrderEventsListenerService {
   }
   @OnEvent(OrderEventsEnum.ORDER_CHANGED)
   async handleOrderChangedEvent(
-    payload: GetEventsFromYKResponseDto | GetPaymentStatusTochkaResponseDto,
+    payload: GetEventsFromYKResponseDto | GetPaymentStatusTochkaResponseDto | GetStatusWebhookResponseDto,
   ) {
     try {
       if (isYoukassaPayload(payload)) {
@@ -88,6 +100,16 @@ export class OrderEventsListenerService {
             status: OrderStatusEnum.CANCELLED,
           });
         }
+      } else if (isSdekPayload(payload)) {
+        const order = await this.ordersRepository.findOne({
+          where: { id_in_courier_service: payload.uuid },
+        });
+        //TODO: Implement
+        if (!order) {
+          this.logger.error('Order not found');
+          return;
+        }
+        if (payload.attributes.code === 'RECEIVED_AT_SHIPMENT_WAREHOUSE') {}
       }
     } catch (error) {
       this.logger.error(error);
