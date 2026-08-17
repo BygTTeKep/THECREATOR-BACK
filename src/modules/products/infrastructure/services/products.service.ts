@@ -185,7 +185,7 @@ export class ProductsService {
   }
   async getProductsPriceByDropIds(
     dropIds: number[],
-  ): Promise<{ id: string; price: number }[]> {
+  ): Promise<{ id: string; prices: ProductVariantsEntity[] }[]> {
     const products = await this.productsRepository.find({
       where: { drop_id: In(dropIds) },
     });
@@ -195,9 +195,7 @@ export class ProductsService {
     const response = products.map((product) => {
       return {
         id: product.id,
-        price: productVariants
-          .filter((variant) => variant.product_id === product.id)
-          .reduce((acc, variant) => acc + Number(variant.price), 0),
+        prices: productVariants.filter((variant) => variant.product_id === product.id),
       };
     });
     return response;

@@ -2,6 +2,7 @@ import { Injectable } from '@nestjs/common';
 import { GetDropsResponseWithPageCountDto } from '../../presentation/dtos/getDrops.dto';
 import { DropsFilesEntity } from '../../domain/entities/dropsFiles.entity';
 import { ProductsEntity } from 'src/modules/products/domain/entities/product.entity';
+import { ProductVariantsEntity } from 'src/modules/products/domain/entities/productVariants.entity';
 
 @Injectable()
 export class GetDropsMapper {
@@ -10,7 +11,7 @@ export class GetDropsMapper {
     dropFiles: DropsFilesEntity[],
     page_count: number,
     products: ProductsEntity[],
-    productsPrice: { id: string; price: number }[],
+    productsPrice: { id: string; prices: ProductVariantsEntity[] }[],
   ): GetDropsResponseWithPageCountDto {
     return {
       page_count: page_count,
@@ -22,6 +23,7 @@ export class GetDropsMapper {
         const productPrice = productsPrice.filter((pp) =>
           product.some((p) => p.id === pp.id),
         );
+        const price = Math.min(...productPrice.map((p) => Math.min(...p.prices.map((pp) => Number(pp.price)))));
         return {
           id: drop.id,
           name: drop.name,
@@ -35,10 +37,7 @@ export class GetDropsMapper {
           ),
           drop_type: drop.drop_type,
           drop_line: drop.drop_line,
-          price: productPrice.reduce(
-            (acc, productPrice) => acc + productPrice.price,
-            0,
-          ),
+          price: price,
         };
       }),
     };
