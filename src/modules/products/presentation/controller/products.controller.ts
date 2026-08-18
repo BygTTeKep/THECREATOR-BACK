@@ -1,5 +1,5 @@
 import { ProductsService } from '../../infrastructure/services/products.service';
-import { Body, Controller, Get, Param, Post, UseGuards } from '@nestjs/common';
+import { Body, Controller, Delete, Get, Param, Post, UseGuards } from '@nestjs/common';
 import { CreateProductDto } from '../dtos/createProduct.dto';
 import { AuthGuard } from 'src/core/guards/auth.guard';
 import { AdminGuard } from 'src/core/guards/admin.guard';
@@ -41,5 +41,16 @@ export class ProductsController {
     @Body() addVariantsToProductDto: AddVariantsToProductDto,
   ) {
     return this.productsService.addVariantsToProduct(addVariantsToProductDto);
+  }
+
+  @ApiOperation({ summary: 'Delete a product' })
+  @ApiResponse({
+    status: 200,
+    description: 'Product deleted successfully',
+  })
+  @Delete(':id')
+  @UseGuards(AdminGuard)
+  async deleteProduct(@Param('id') id: string) {
+    return this.productsService.deleteProduct(id);
   }
 }

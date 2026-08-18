@@ -27,30 +27,34 @@ export class ProductsService {
   ) {}
 
   async createProduct(createProductDto: CreateProductDto): Promise<string> {
-    const product = this.productsRepository.create(createProductDto);
-    const newProduct = await this.productsRepository.save(product);
-    if (createProductDto.files.length > 0) {
-      const productFiles = createProductDto.files.map((file) =>
-        this.productFilesRepository.create({
-          product_id: newProduct.id,
-          file_url: file,
-        }),
-      );
-      await this.productFilesRepository.save(productFiles);
-    }
-    if (createProductDto.variants.length > 0) {
-      const productVariants = createProductDto.variants.map((variant) =>
-        this.productVariantsRepository.create({
-          product_id: newProduct.id,
-          size: variant.size,
-          price: variant.price,
-          stock: variant.stock,
-          sku: variant.sku,
-        }),
-      );
-      await this.productVariantsRepository.save(productVariants);
-    }
-    return newProduct.id;
+    const newProduct = await this.productsRepository.manager.transaction(async (transactionalEntityManager) => {
+      const product = transactionalEntityManager.create(ProductsEntity, createProductDto);
+      const newProduct = await transactionalEntityManager.save(ProductsEntity, product);
+      if (createProductDto.files.length > 0) {
+        const productFiles = createProductDto.files.map((file) =>
+          transactionalEntityManager.create(ProductFilesEntity, {
+            product_id: newProduct.id,
+            file_url: file,
+          }),
+        );
+        await transactionalEntityManager.save(ProductFilesEntity, productFiles);
+      }
+      if (createProductDto.variants.length > 0) {
+        const productVariants = createProductDto.variants.map((variant) =>
+          transactionalEntityManager.create(ProductVariantsEntity, {
+            product_id: newProduct.id,
+            size: variant.size,
+            price: variant.price,
+            stock: variant.stock,
+            sku: variant.sku,
+          }),
+        );
+        await transactionalEntityManager.save(ProductVariantsEntity, productVariants);
+      }
+      return newProduct;
+    });
+    
+    return newProduct?.id ?? '';
   }
   async getProductById(id: string): Promise<ProductsEntity> {
     const product = await this.productsRepository.findOne({ where: { id } });
@@ -199,5 +203,9 @@ export class ProductsService {
       };
     });
     return response;
+  }
+
+  async deleteProduct(id: string): Promise<void> {
+    await this.productsRepository.delete(id);
   }
 }
