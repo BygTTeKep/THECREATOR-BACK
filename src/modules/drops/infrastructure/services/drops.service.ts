@@ -190,4 +190,13 @@ export class DropsService {
       this.logger.error(error);
     }
   }
+
+  async deleteDropById(id: number) {
+    const drop = await this.dropsRepository.findOne({ where: { id: id } });
+    if (!drop) {
+      throw new NotFoundException('Drop not found');
+    }
+    await this.dropsRepository.delete(id);
+    return drop;
+  }
 }

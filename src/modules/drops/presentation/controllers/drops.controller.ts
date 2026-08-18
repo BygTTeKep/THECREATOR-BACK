@@ -7,6 +7,7 @@ import {
   Post,
   Put,
   UseGuards,
+  Delete,
 } from '@nestjs/common';
 import { DropsService } from '../../infrastructure/services/drops.service';
 import { GetDropsDto, GetDropsResponseDto } from '../dtos/getDrops.dto';
@@ -70,5 +71,11 @@ export class DropsController {
     @Body() updateDropDto: UpdateDropDto,
   ) {
     return this.dropsService.updateDrop(id, updateDropDto);
+  }
+
+  @Delete(':id')
+  @UseGuards(AdminGuard)
+  async deleteDropById(@Param('id', ParseIntPipe) id: number) {
+    return this.dropsService.deleteDropById(id);
   }
 }
