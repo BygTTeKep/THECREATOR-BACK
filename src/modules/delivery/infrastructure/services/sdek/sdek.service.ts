@@ -51,6 +51,7 @@ export class SdekService {
   }
   async createOrder(order: CreateOrderDto): Promise<string> {
     try {
+      this.logger.log('createOrder', order);
       const accessToken =
         await this.sdekGetAccessTokenService.getOrSetAccessToken();
       const response = await firstValueFrom(
@@ -66,6 +67,7 @@ export class SdekService {
           },
         ),
       );
+      this.logger.log('response status', response.status);
       if (response.status !== 202) {
         this.logger.error(response.data);
         throw new BadRequestException(response.data?.errors);

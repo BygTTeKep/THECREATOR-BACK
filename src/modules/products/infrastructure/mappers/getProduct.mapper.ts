@@ -27,7 +27,6 @@ export class GetProductMapper {
         price: variant.price,
         stock: variant.stock,
       }));
-    console.log(productFilesDto);
     return {
       id: product.id,
       drop_id: product.drop_id,

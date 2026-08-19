@@ -1,9 +1,11 @@
 import { Injectable } from '@nestjs/common';
 import { CreatePaymentLinkDto } from '../dtos/createPaymentLink.dto';
 import { PaymentMode } from '../enums/paymentMode.enum';
+import { ConfigService } from '@nestjs/config';
 
 @Injectable()
 export class TochkaCreatePaymentMapper {
+  constructor(private readonly configService: ConfigService) {}
   /**
    *
    * @param amount - amount of payment
@@ -18,19 +20,21 @@ export class TochkaCreatePaymentMapper {
     paymentMode: PaymentMode,
     customerCode: string,
   ): CreatePaymentLinkDto {
-    //TODO
+    const environment = this.configService.get<string>('NODE_ENV');
     const purpose =
       type === 'subscription'
         ? 'Покупка подписки на дропы THE CREATOR'
         : 'Оплата дропа на сайте THE CREATOR';
     const redirectUrl =
-      type === 'subscription'
+      (type === 'subscription' || type === 'order') &&
+      environment === 'production'
         ? 'https://thecreatorstudio.ru/profile'
-        : 'https://thecreatorstudio.ru/profile';
+        : 'http://localhost:3000/profile';
     const failRedirectUrl =
-      type === 'subscription'
+      (type === 'subscription' || type === 'order') &&
+      environment === 'production'
         ? 'https://thecreatorstudio.ru/profile'
-        : 'https://thecreatorstudio.ru/profile';
+        : 'http://localhost:3000/profile';
     return {
       customerCode: customerCode,
       amount: amount,
@@ -38,7 +42,6 @@ export class TochkaCreatePaymentMapper {
       paymentMode: [paymentMode],
       redirectUrl: redirectUrl,
       failRedirectUrl: failRedirectUrl,
-      // merchantId: '200000000001097', //TODO merchantId
     };
   }
 }
