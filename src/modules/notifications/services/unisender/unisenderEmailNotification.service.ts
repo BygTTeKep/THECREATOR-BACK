@@ -53,8 +53,6 @@ export class UnisenderEmailNotificationService {
       if (!listId) {
         throw new Error('list id not found pls create or check');
       }
-      console.log(listId);
-      console.log(dto);
       const resp = await firstValueFrom(
         this.httpService.get(
           `${this.UNISENDER_API_URL}/sendEmail?format=json&api_key=${this.UNISENDER_API_KEY}&email=${dto.email}&sender_name=THE+CREATOR&sender_email=${this.THECREATOR_MAIL}&subject=${Subject[dto.messageType]}&body=${Description[dto.messageType]}&list_id=${listId.id}`,

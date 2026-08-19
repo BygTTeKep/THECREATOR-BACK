@@ -61,6 +61,7 @@ export class CreateOrderService {
     user: UserEntity,
   ): Promise<string | null> {
     try {
+
       let returnUrl: string | null = null;
 
       const canBuy = await this.rulesService.canUserBuyProduct(
@@ -117,18 +118,20 @@ export class CreateOrderService {
               products,
               totalAmount,
             );
+            this.logger.log('orderInCourierService', orderInCourierService);
             await transactionalEntityManager.update(OrdersEntity, newOrder.id, {
               id_in_courier_service: orderInCourierService,
             });
           }
 
-
-          const paymentUrl = await this.createPaymentInPaymentSystem(
-            newOrder.id,
-            totalAmount,
-            order.payment_mode,
-            transactionalEntityManager,
-          );
+          
+          const paymentUrl = null
+          // await this.createPaymentInPaymentSystem(
+          //   newOrder.id,
+          //   totalAmount,
+          //   order.payment_mode,
+          //   transactionalEntityManager,
+          // );
           if (paymentUrl) {
             returnUrl = paymentUrl;
           }
@@ -287,7 +290,6 @@ export class CreateOrderService {
     const orderInCourierService = await this.deliveryService.createOrder(data);
     return orderInCourierService;
   }
-  //TODO включить платежи для заказов
   private async createPaymentInPaymentSystem(
     newOrderId: string,
     totalAmount: number,

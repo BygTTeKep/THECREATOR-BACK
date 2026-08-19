@@ -84,6 +84,7 @@ services:
       TOCHKA_API_KEY: ${TOCHKA_API_KEY}
       TOCHKA_BASE_URL: ${TOCHKA_BASE_URL}
       TOCHKA_WEBHOOK_PUBLIC_KEY_PEM: ${TOCHKA_WEBHOOK_PUBLIC_KEY_PEM}
+      NODE_ENV: production
     volumes:
       - uploads_data:/app/uploads
     networks:

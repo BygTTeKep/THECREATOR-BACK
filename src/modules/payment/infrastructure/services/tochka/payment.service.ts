@@ -169,8 +169,9 @@ export class TochkaPaymentService {
       console.log(response.data.Data.Customer);
       const data: GetCustomerListResponseDto =
         response.data as GetCustomerListResponseDto;
+      const customerType = this.configService.get<string>('NODE_ENV') === 'production' ? 'Business' : 'Personal';
       const foundCustomer = data.Data.Customer.find(
-        (customer) => customer.customerType === 'Business',
+        (customer) => customer.customerType === customerType,
       );
       if (!foundCustomer) {
         throw new NotFoundException('Customer not found');
