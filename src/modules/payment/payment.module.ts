@@ -7,6 +7,7 @@ import { TochkaPaymentService } from './infrastructure/services/tochka/payment.s
 import { TypeOrmModule } from '@nestjs/typeorm';
 import { PaymentEntity } from './domain/entities/payment.entity';
 import { TochkaController } from './infrastructure/services/tochka/controllers/tochka.controller';
+import { PaymentController } from './presentation/controllers/payment.controller';
 
 @Module({
   imports: [TypeOrmModule.forFeature([PaymentEntity])],
@@ -24,6 +25,6 @@ import { TochkaController } from './infrastructure/services/tochka/controllers/t
     YoukassaPaymentService,
     TochkaPaymentService,
   ],
-  controllers: [TochkaController],
+  controllers: [TochkaController, PaymentController],
 })
 export class PaymentModule {}
