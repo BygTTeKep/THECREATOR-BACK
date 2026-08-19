@@ -125,13 +125,12 @@ export class CreateOrderService {
           }
 
           
-          const paymentUrl = null
-          // await this.createPaymentInPaymentSystem(
-          //   newOrder.id,
-          //   totalAmount,
-          //   order.payment_mode,
-          //   transactionalEntityManager,
-          // );
+          const paymentUrl = await this.createPaymentInPaymentSystem(
+            newOrder.id,
+            totalAmount,
+            order.payment_mode,
+            transactionalEntityManager,
+          );
           if (paymentUrl) {
             returnUrl = paymentUrl;
           }
