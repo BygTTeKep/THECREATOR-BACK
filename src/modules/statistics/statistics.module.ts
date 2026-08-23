@@ -6,6 +6,7 @@ import { AnalyticsEventsEntity } from './domain/entities/analyticsEvents.entity'
 import { CalculateStatisticService } from './infrastructure/services/calculateStatistic.service';
 import { SendStatisticToTgCron } from './presentation/crons/sendStatisticTg.cron';
 import { UsersModule } from '../users/users.module';
+import { CalcStatisticMapper } from './infrastructure/mappers/calcStatistic.mapper';
 
 @Module({
   imports: [TypeOrmModule.forFeature([AnalyticsEventsEntity]), UsersModule],
@@ -14,6 +15,7 @@ import { UsersModule } from '../users/users.module';
     StatisticService,
     CalculateStatisticService,
     SendStatisticToTgCron,
+    CalcStatisticMapper,
   ],
 })
 export class StatisticsModule {}

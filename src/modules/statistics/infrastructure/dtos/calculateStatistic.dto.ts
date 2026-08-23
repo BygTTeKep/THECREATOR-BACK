@@ -11,6 +11,13 @@ import {
 import { Type } from 'class-transformer';
 import { GroupByPeriodEnum } from 'src/core/enums/groupByPeriod.enum';
 
+export class CalcStatisticOrmDto {
+  cnt: string;
+  event_type: EventTypeStatisticEnum;
+  page_url: string;
+  period: string;
+}
+
 export class CalculateStatisticFilterDto {
   @ApiProperty({ type: DateFilterDto })
   date?: DateFilterDto;

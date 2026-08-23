@@ -8,12 +8,14 @@ import {
 import { CreateStatisticResDto } from '../../presentation/dtos/createStatistic.dto';
 import { Injectable } from '@nestjs/common';
 import { GroupByPeriodEnum } from 'src/core/enums/groupByPeriod.enum';
+import { CalcStatisticMapper } from '../mappers/calcStatistic.mapper';
 
 @Injectable()
 export class CalculateStatisticService {
   constructor(
     @InjectRepository(AnalyticsEventsEntity)
     private readonly analyticRepo: Repository<AnalyticsEventsEntity>,
+    private readonly calcStatisticMapper: CalcStatisticMapper,
   ) {}
 
   async calcualteStatistic(
@@ -29,12 +31,8 @@ export class CalculateStatisticService {
 
     query.orderBy('period', 'DESC');
     const result = await query.getRawMany();
-    return result.map((r) => ({
-      count: r.cnt,
-      event_type: r.event_type,
-      page_url: r.page_url,
-      period: r.period,
-    }));
+    const res = this.calcStatisticMapper.toResponse(result);
+    return res;
   }
 
   private applyFilters(
