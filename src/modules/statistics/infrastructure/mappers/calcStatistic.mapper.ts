@@ -8,7 +8,7 @@ export class CalcStatisticMapper {
     return dto.map((r) => ({
       count: Number(r.cnt),
       event_type: r.event_type,
-      page_url: r.page_url.split('?')[0],
+      page_url: r.page_url,
       period: r.period,
     }));
   }

@@ -25,7 +25,11 @@ export class CalculateStatisticService {
 
     const query = this.analyticRepo
       .createQueryBuilder('stat')
-      .select(['COUNT(stat.id) as cnt', 'event_type', 'page_url']);
+      .select([
+        'COUNT(stat.id) as cnt',
+        'event_type',
+        `split_part(stat.page_url, '?', 1) as page_url`,
+      ]);
     this.applyFilters(query, filter);
     this.applyGroupBy(query, groupBy);
 
@@ -53,7 +57,7 @@ export class CalculateStatisticService {
       .andWhere('stat.created_at < :to', { to })
       .andWhere('stat.event_type = :et', { et: filter.event_type });
     if (filter.page_urls?.length) {
-      query.andWhere('stat.page_url IN (:...pages)', {
+      query.andWhere(`split_part(stat.page_url, '?', 1) IN (:...pages)`, {
         pages: filter.page_urls,
       });
     }
@@ -87,7 +91,7 @@ export class CalculateStatisticService {
     query
       .addSelect(periodExpression, 'period')
       .groupBy(periodExpression)
-      .addGroupBy('stat.page_url')
+      .addGroupBy(`split_part(stat.page_url, '?', 1)`)
       .addGroupBy('stat.event_type');
   }
 }
