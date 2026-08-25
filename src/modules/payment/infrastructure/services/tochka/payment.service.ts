@@ -27,6 +27,7 @@ import { createPublicKey } from 'node:crypto';
 import { readFileSync } from 'node:fs';
 import { isAbsolute, join } from 'node:path';
 import { AxiosError } from 'axios';
+import https from 'https';
 
 @Injectable()
 export class TochkaPaymentService {
@@ -64,6 +65,9 @@ export class TochkaPaymentService {
     this.TOCHKA_WEBHOOK_PUBLIC_KEY_PEM = this.loadPublicKey(
       tochkaWebhookPublicKeyPem,
     );
+    this.httpService.axiosRef.defaults.httpsAgent = new https.Agent({
+      rejectUnauthorized: false,
+    });
   }
 
   private loadPublicKey(value: string): string {

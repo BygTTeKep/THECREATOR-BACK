@@ -20,12 +20,9 @@ export class DeliveryService {
   ) {}
   async getDeliveryByUserPhone(phone: string) {
     try {
-      const countryCode = getCountryByPhone(phone);
-      if (!countryCode) {
-        throw new Error('Invalid phone number');
-      }
-      const delivery: DeliveryEntity[] | null | undefined =
-        await this.deliveryRepository
+      const countryCode = phone ? getCountryByPhone(phone) : null;
+
+      const deliveryRaw= this.deliveryRepository
           .createQueryBuilder('delivery')
           .select([
             'delivery.id as id',
@@ -42,12 +39,13 @@ export class DeliveryService {
             'countries',
             'countries.id = delivery_country.country_id',
           )
-          .where('countries.code = :code', { code: countryCode })
-          .getRawMany();
+      if (countryCode) {
+        deliveryRaw.where('countries.code = :code', { code: countryCode });
+      }
+      const delivery: DeliveryEntity[] | null | undefined =  await deliveryRaw.getRawMany();
       if (!delivery) {
         throw new Error('Delivery not found');
       }
-      console.log(delivery);
       return delivery;
     } catch (error) {
       this.logger.error(error);

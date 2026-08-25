@@ -14,7 +14,7 @@ import { PaymentsService } from 'src/modules/payment/infrastructure/services/pay
 import { CreatePaymentMapper } from 'src/modules/payment/infrastructure/services/youkassa/mappers/createPayment.mapper';
 import { EventEmitter2 } from '@nestjs/event-emitter';
 import { DeliveryService } from 'src/modules/delivery/infrastructure/services/delivery.service';
-import { CreateOrderDto } from '../../presentation/dtos/createOrder.dto';
+import { CreateOrderDto, CreateOrderForNoAuthUserDto } from '../../presentation/dtos/createOrder.dto';
 import { UserEntity } from 'src/modules/users/domain/entities/user.entity';
 import { OrderTypeEnum } from 'src/modules/delivery/infrastructure/services/sdek/enums/order/orderType.enum';
 import { ContagentTypeEnum } from 'src/modules/delivery/infrastructure/services/sdek/dtos/recipient.dto';
@@ -35,6 +35,7 @@ import { PaymentFor } from 'src/modules/payment/domain/enums/paymentFor.enum';
 import { TochkaCreatePaymentMapper } from 'src/modules/payment/infrastructure/services/tochka/mappers/toCreatePayment.mapper';
 import { PaymentMode } from 'src/modules/payment/infrastructure/services/tochka/enums/paymentMode.enum';
 import { OrdersTypeEnum } from '../../domain/enums/ordersType.enum';
+import { ConfigService } from '@nestjs/config';
 
 @Injectable()
 export class CreateOrderService {
@@ -54,6 +55,7 @@ export class CreateOrderService {
     private readonly eventEmitter: EventEmitter2,
     private readonly deliveryService: DeliveryService,
     private readonly tochkaCreatePaymentMapper: TochkaCreatePaymentMapper,
+    private readonly configService: ConfigService,
   ) {}
 
   async createOrder(
@@ -339,6 +341,75 @@ export class CreateOrderService {
         return SdekTarif.COURIER;
       default:
         throw new BadRequestException('Invalid delivery type');
+    }
+  }
+
+  async createOrderForNoAuthUser(
+    order: CreateOrderForNoAuthUserDto,
+  ): Promise<string | null> {
+    try {
+      const adminID = this.configService.get('NODE_ENV') === 'production' ? 'aace64aa-b1ba-43d6-9e78-644ad0a29cda' : 'd27c9587-4491-4e5b-81bb-883e5b4e1b8f';
+      return await this.dataSource.transaction(
+        'SERIALIZABLE',
+        async (transactionalEntityManager) => {
+          const products =
+            await this.productsService.getProductsByDropIdAndProductIds(
+              order.dropId,
+              order.products.map((item) => item.product_id),
+            );
+          const productVariantIds = order.products.map(
+            (item) => item.variant_id,
+          );
+          const productVariants =
+            await this.productsService.getProductVariantsByIds(
+              productVariantIds,
+            );
+          if (productVariants.length === 0) {
+            throw new BadRequestException('Products not found');
+          }
+          const totalAmount = this.getTotalAmount(order, productVariants);
+          const newOrder = await transactionalEntityManager.save(
+            OrdersEntity,
+            this.ordersRepository.create({
+              user_id: adminID,
+              status: OrderStatusEnum.PENDING,
+              total_amount: totalAmount,
+              created_at: new Date(),
+              drop_id: order.dropId,
+              delivery_method: order.deliveryMethod,
+              delivery_type: order.delivery_type,
+              order_type: order.order_type,
+              payment_type: order.payment_type,
+              address: order.shippingAddress,
+            }),
+          );
+
+          if (order.order_type !== OrdersTypeEnum.preorder) {
+            const orderInCourierService = await this.createOrderInCourierService(
+              order,
+              newOrder.id,
+              productVariants,
+              { phone: order.phone } as UserEntity,
+              products,
+              totalAmount,
+            );
+            this.logger.log('orderInCourierService', orderInCourierService);
+            await transactionalEntityManager.update(OrdersEntity, newOrder.id, {
+              id_in_courier_service: orderInCourierService,
+            });
+          }
+
+          const paymentUrl = await this.createPaymentInPaymentSystem(
+            newOrder.id,
+            totalAmount,
+            order.payment_mode,
+            transactionalEntityManager,
+          );
+          return paymentUrl;
+        },
+      );
+    } catch (error) {
+      throw new BadRequestException((error as Error).message);
     }
   }
 }
