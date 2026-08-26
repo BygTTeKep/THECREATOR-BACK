@@ -181,6 +181,7 @@ export class OrdersService {
         'users.status as user_status',
         'users.total_months as total_months',
         'users.current_tier_id as current_tier_id',
+        'orders.metadata as metadata',
       ])
       .leftJoin('users', 'users', 'users.id = orders.user_id')
       .where('orders.id = :orderId', { orderId })

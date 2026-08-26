@@ -54,4 +54,7 @@ export class OrdersEntity {
 
   @Column({ type: 'timestamp', nullable: true })
   planned_delivery_date: Date;
+
+  @Column({ type: 'jsonb', nullable: true })
+  metadata: Record<string, any>;
 }

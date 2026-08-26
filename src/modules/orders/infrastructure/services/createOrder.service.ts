@@ -383,6 +383,7 @@ export class CreateOrderService {
               order_type: order.order_type,
               payment_type: order.payment_type,
               address: order.shippingAddress,
+              metadata: order,
             }),
           );
 
