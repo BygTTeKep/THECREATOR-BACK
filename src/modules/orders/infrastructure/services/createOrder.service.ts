@@ -22,7 +22,6 @@ import { PaymentTypeEnum } from 'src/core/enums/paymentType.enum';
 import { OrderStatusEnum } from '../../domain/enums/ordersStatus.enum';
 import { FeatureFlagEnum } from 'src/modules/features-flag/domain/enums/ff.enum';
 import { PaymentVariantsEnum } from 'src/modules/payment/domain/enums/paymentVariants.enum';
-import { CurrencyEnum } from 'src/modules/payment/domain/enums/currency.enum';
 import { OrderItemsEntity } from '../../domain/entities/orderItems.entity';
 import { TelegramEventsEnum } from 'src/modules/telegram/infrastructure/services/telegramEventsListener.service';
 import { ProductVariantsEntity } from 'src/modules/products/domain/entities/productVariants.entity';
@@ -40,6 +39,7 @@ import { ConfigService } from '@nestjs/config';
 @Injectable()
 export class CreateOrderService {
   private readonly logger = new Logger(CreateOrderService.name);
+  private readonly PVZ_CODE = 'NKZ15';
   constructor(
     @InjectRepository(OrdersEntity)
     private readonly ordersRepository: Repository<OrdersEntity>,
@@ -258,7 +258,7 @@ export class CreateOrderService {
         contragent_type: ContagentTypeEnum.INDIVIDUAL,
       },
       packages,
-      shipment_point: order.shippingAddress.house, //TODO: поменять на место куда я буду привозить
+      shipment_point: this.PVZ_CODE,
     };
     if (order.delivery_type === DeliveryTypeEnum.pvz) {
       data.delivery_point = order.shippingAddress.house;
