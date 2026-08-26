@@ -11,7 +11,7 @@ export class DeliveryController {
   constructor(private readonly deliveryService: DeliveryService) {}
   @Get('get-delivery-by-user-phone')
   async getDeliveryByUserPhone(@AuthUser() user: UserEntity) {
-    return this.deliveryService.getDeliveryByUserPhone(user.phone);
+    return this.deliveryService.getDeliveryByUserPhone(user?.phone);
   }
 
   @ApiOperation({ summary: 'Get location by city name' })

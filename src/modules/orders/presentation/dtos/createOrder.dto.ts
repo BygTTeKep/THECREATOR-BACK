@@ -141,3 +141,13 @@ export class CreateOrderDto {
   @IsEnum(PaymentMode)
   payment_mode: PaymentMode;
 }
+
+
+export class CreateOrderForNoAuthUserDto extends CreateOrderDto { 
+  @ApiProperty({ description: 'The phone of the user' })
+  @IsString()
+  @IsNotEmpty()
+  phone: string;
+
+
+}

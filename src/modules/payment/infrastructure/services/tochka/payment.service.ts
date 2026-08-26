@@ -27,6 +27,7 @@ import { createPublicKey } from 'node:crypto';
 import { readFileSync } from 'node:fs';
 import { isAbsolute, join } from 'node:path';
 import { AxiosError } from 'axios';
+import https from 'https';
 
 @Injectable()
 export class TochkaPaymentService {

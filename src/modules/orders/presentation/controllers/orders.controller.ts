@@ -8,7 +8,7 @@ import {
   Post,
   UseGuards,
 } from '@nestjs/common';
-import { CreateOrderDto } from '../dtos/createOrder.dto';
+import { CreateOrderDto, CreateOrderForNoAuthUserDto } from '../dtos/createOrder.dto';
 import { UserEntity } from '../../../users/domain/entities/user.entity';
 import { AuthGuard } from 'src/core/guards/auth.guard';
 import { AuthUser } from 'src/core/decorators/authUser.decorator';
@@ -91,4 +91,19 @@ export class OrdersController {
   async getOrderById(@Param('id') id: string) {
     return this.ordersService.getOrdersAdminDetails(id);
   }
+
+  @ApiOperation({ summary: 'Create a new order for no auth user' })
+  @ApiBody({ type: CreateOrderForNoAuthUserDto })
+  @ApiResponse({
+    status: 201,
+    description: 'Order created successfully',
+    type: String,
+  })
+  @Post('no-auth')
+  async createOrderForNoAuthUser(@Body() createOrderDto: CreateOrderForNoAuthUserDto) {
+    const returnUrl = await this.ordersService.createOrderForNoAuthUser(createOrderDto);
+    return {
+      returnUrl,
+    };
+  } 
 }
