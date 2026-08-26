@@ -7,6 +7,7 @@ export class GetOrderByIdMapper {
   toDto(data: any): GetOrderByIdResponseDto {
     return {
       id: data.id,
+      metadata: data.metadata,
       drop_id: data.drop_id,
       tracking_number: data.tracking_number,
       total_amount: data.total_amount,

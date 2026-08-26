@@ -73,4 +73,7 @@ export class GetOrderByIdResponseDto {
     example: OrdersTypeEnum.preorder,
   })
   order_type: OrdersTypeEnum;
+
+  @ApiProperty({ description: 'order metadata' })
+  metadata: Record<string, any>;
 }
