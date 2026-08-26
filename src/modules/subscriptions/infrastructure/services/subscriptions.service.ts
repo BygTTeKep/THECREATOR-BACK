@@ -177,6 +177,7 @@ export class SubscriptionsService {
               'subscription',
               dto.paymentMode,
               customerCode,
+              false,
             ),
             PaymentFor.SUBSCRIPTION,
           );
