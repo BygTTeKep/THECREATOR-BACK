@@ -1,11 +1,10 @@
 import { Injectable } from '@nestjs/common';
 import { CreatePaymentLinkDto } from '../dtos/createPaymentLink.dto';
 import { PaymentMode } from '../enums/paymentMode.enum';
-import { ConfigService } from '@nestjs/config';
 
 @Injectable()
 export class TochkaCreatePaymentMapper {
-  constructor(private readonly configService: ConfigService) {}
+  constructor() {}
   /**
    *
    * @param amount - amount of payment
@@ -19,22 +18,22 @@ export class TochkaCreatePaymentMapper {
     type: 'subscription' | 'order',
     paymentMode: PaymentMode,
     customerCode: string,
+    forNoAuthUser: boolean,
   ): CreatePaymentLinkDto {
-    const environment = this.configService.get<string>('NODE_ENV');
     const purpose =
       type === 'subscription'
         ? 'Покупка подписки на дропы THE CREATOR'
         : 'Оплата дропа на сайте THE CREATOR';
-    const redirectUrl =
-      (type === 'subscription' || type === 'order') &&
-      environment === 'production'
-        ? 'https://thecreatorstudio.ru/profile'
-        : 'http://localhost:3000/profile';
-    const failRedirectUrl =
-      (type === 'subscription' || type === 'order') &&
-      environment === 'production'
-        ? 'https://thecreatorstudio.ru/profile'
-        : 'http://localhost:3000/profile';
+
+    let redirectUrl = '';
+    let failRedirectUrl = '';
+    if (forNoAuthUser) {
+      redirectUrl = 'https://thecreatorstudio.ru/noauth/payment/success';
+      failRedirectUrl = 'https://thecreatorstudio.ru/noauth/payment/fail';
+    } else {
+      redirectUrl = 'https://thecreatorstudio.ru/profile';
+      failRedirectUrl = 'https://thecreatorstudio.ru/profile';
+    }
     return {
       customerCode: customerCode,
       amount: amount,

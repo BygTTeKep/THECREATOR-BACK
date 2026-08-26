@@ -296,6 +296,7 @@ export class CreateOrderService {
     totalAmount: number,
     paymentMode: PaymentMode,
     transactionalEntityManager: EntityManager,
+    forNoAuthUser: boolean = false,
   ): Promise<string | null> {
     const isPaymentForOrdersEnabled = await this.ffService.isFeatureFlagActive(
       FeatureFlagEnum.PAYMENT_FOR_ORDERS,
@@ -313,6 +314,7 @@ export class CreateOrderService {
           'order',
           paymentMode,
           customerCode,
+          forNoAuthUser,
         ),
         PaymentFor.ORDER,
       );
@@ -404,6 +406,7 @@ export class CreateOrderService {
             totalAmount,
             order.payment_mode,
             transactionalEntityManager,
+            true,
           );
           return paymentUrl;
         },
