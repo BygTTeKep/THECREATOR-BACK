@@ -65,9 +65,6 @@ export class TochkaPaymentService {
     this.TOCHKA_WEBHOOK_PUBLIC_KEY_PEM = this.loadPublicKey(
       tochkaWebhookPublicKeyPem,
     );
-    this.httpService.axiosRef.defaults.httpsAgent = new https.Agent({
-      rejectUnauthorized: false,
-    });
   }
 
   private loadPublicKey(value: string): string {
