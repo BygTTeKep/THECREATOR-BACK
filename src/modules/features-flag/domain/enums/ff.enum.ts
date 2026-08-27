@@ -5,4 +5,6 @@ export enum FeatureFlagEnum {
   PAYMENT_FOR_ORDERS = 'PAYMENT_FOR_ORDERS',
   // когда зарелизмся ввключать, он отключает все кроме лэндинга на fe
   IS_RELEASE = 'IS_RELEASE',
+
+  NEWSLETTER_ENABLE='NEWSLETTER_ENABLE'
 }
