@@ -14,7 +14,10 @@ import { PaymentsService } from 'src/modules/payment/infrastructure/services/pay
 import { CreatePaymentMapper } from 'src/modules/payment/infrastructure/services/youkassa/mappers/createPayment.mapper';
 import { EventEmitter2 } from '@nestjs/event-emitter';
 import { DeliveryService } from 'src/modules/delivery/infrastructure/services/delivery.service';
-import { CreateOrderDto, CreateOrderForNoAuthUserDto } from '../../presentation/dtos/createOrder.dto';
+import {
+  CreateOrderDto,
+  CreateOrderForNoAuthUserDto,
+} from '../../presentation/dtos/createOrder.dto';
 import { UserEntity } from 'src/modules/users/domain/entities/user.entity';
 import { OrderTypeEnum } from 'src/modules/delivery/infrastructure/services/sdek/enums/order/orderType.enum';
 import { ContagentTypeEnum } from 'src/modules/delivery/infrastructure/services/sdek/dtos/recipient.dto';
@@ -63,7 +66,6 @@ export class CreateOrderService {
     user: UserEntity,
   ): Promise<string | null> {
     try {
-
       let returnUrl: string | null = null;
 
       const canBuy = await this.rulesService.canUserBuyProduct(
@@ -112,21 +114,21 @@ export class CreateOrderService {
           // Создаем заказ в СДЭК
           // Если предзаказ, то руками создаем заказ в СДЭК
           if (order.order_type !== OrdersTypeEnum.preorder) {
-            const orderInCourierService = await this.createOrderInCourierService(
-              order,
-              newOrder.id,
-              productVariants,
-              user,
-              products,
-              totalAmount,
-            );
+            const orderInCourierService =
+              await this.createOrderInCourierService(
+                order,
+                newOrder.id,
+                productVariants,
+                user,
+                products,
+                totalAmount,
+              );
             this.logger.log('orderInCourierService', orderInCourierService);
             await transactionalEntityManager.update(OrdersEntity, newOrder.id, {
               id_in_courier_service: orderInCourierService,
             });
           }
 
-          
           const paymentUrl = await this.createPaymentInPaymentSystem(
             newOrder.id,
             totalAmount,
@@ -350,7 +352,10 @@ export class CreateOrderService {
     order: CreateOrderForNoAuthUserDto,
   ): Promise<string | null> {
     try {
-      const adminID = this.configService.get('NODE_ENV') === 'production' ? 'b4bab02b-7e1d-40b5-97fe-b9672047e28d' : 'd27c9587-4491-4e5b-81bb-883e5b4e1b8f';
+      const adminID =
+        this.configService.get('NODE_ENV') === 'production'
+          ? 'b4bab02b-7e1d-40b5-97fe-b9672047e28d'
+          : 'd27c9587-4491-4e5b-81bb-883e5b4e1b8f';
       return await this.dataSource.transaction(
         'SERIALIZABLE',
         async (transactionalEntityManager) => {
@@ -388,14 +393,15 @@ export class CreateOrderService {
           );
 
           if (order.order_type !== OrdersTypeEnum.preorder) {
-            const orderInCourierService = await this.createOrderInCourierService(
-              order,
-              newOrder.id,
-              productVariants,
-              { phone: order.phone } as UserEntity,
-              products,
-              totalAmount,
-            );
+            const orderInCourierService =
+              await this.createOrderInCourierService(
+                order,
+                newOrder.id,
+                productVariants,
+                { phone: order.phone } as UserEntity,
+                products,
+                totalAmount,
+              );
             this.logger.log('orderInCourierService', orderInCourierService);
             await transactionalEntityManager.update(OrdersEntity, newOrder.id, {
               id_in_courier_service: orderInCourierService,

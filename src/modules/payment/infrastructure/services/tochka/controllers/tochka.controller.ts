@@ -36,11 +36,17 @@ export class TochkaController {
   }
 
   @ApiOperation({ summary: 'Create a payment link' })
-  @ApiResponse({ status: 201, description: 'Payment link created successfully' })
+  @ApiResponse({
+    status: 201,
+    description: 'Payment link created successfully',
+  })
   @ApiBody({ type: CreatePaymentLinkDto })
   @ApiQuery({ name: 'paymentFor', enum: PaymentFor })
   @Post('create-payment-link')
-  async createPaymentLink(@Body() body: CreatePaymentLinkDto, @Query('paymentFor') paymentFor: PaymentFor) {
+  async createPaymentLink(
+    @Body() body: CreatePaymentLinkDto,
+    @Query('paymentFor') paymentFor: PaymentFor,
+  ) {
     return this.tochkaPaymentService.createLinkToPayment(body, paymentFor);
   }
 }

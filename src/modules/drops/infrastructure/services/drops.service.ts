@@ -85,6 +85,7 @@ export class DropsService {
     if (drop_line) {
       query.andWhere('drops.drop_line = :dl', { dl: drop_line });
     }
+    query.andWhere('drops.is_visible = true');
     const count = await query.getCount();
     query
       .skip((page - 1) * limit)

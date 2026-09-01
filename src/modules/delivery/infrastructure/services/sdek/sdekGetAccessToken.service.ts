@@ -26,7 +26,6 @@ export class SdekGetAccessTokenService {
     const baseUrl = this.configService.get<string>('SDEK_BASE_URL');
 
     this.httpService.axiosRef.defaults.baseURL = baseUrl;
-
   }
   /**
    * метод для получения токена sdek

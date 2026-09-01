@@ -6,5 +6,5 @@ export enum FeatureFlagEnum {
   // когда зарелизмся ввключать, он отключает все кроме лэндинга на fe
   IS_RELEASE = 'IS_RELEASE',
 
-  NEWSLETTER_ENABLE='NEWSLETTER_ENABLE'
+  NEWSLETTER_ENABLE = 'NEWSLETTER_ENABLE',
 }

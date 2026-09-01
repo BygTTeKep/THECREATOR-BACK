@@ -5,9 +5,7 @@ import { MigrationInterface, QueryRunner } from 'typeorm';
  * drops → products → product_files / product_variants
  * drops → drops_files
  */
-export class AddCascadeDeleteConstraintsForDrops1786300000000
-  implements MigrationInterface
-{
+export class AddCascadeDeleteConstraintsForDrops1786300000000 implements MigrationInterface {
   public async up(queryRunner: QueryRunner): Promise<void> {
     await queryRunner.query(`
       DO $$

@@ -142,12 +142,9 @@ export class CreateOrderDto {
   payment_mode: PaymentMode;
 }
 
-
-export class CreateOrderForNoAuthUserDto extends CreateOrderDto { 
+export class CreateOrderForNoAuthUserDto extends CreateOrderDto {
   @ApiProperty({ description: 'The phone of the user' })
   @IsString()
   @IsNotEmpty()
   phone: string;
-
-
 }
