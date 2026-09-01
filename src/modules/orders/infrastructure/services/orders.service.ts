@@ -2,7 +2,10 @@ import { OrdersEntity } from '../../domain/entities/orders.entity';
 import { Injectable, Logger } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
-import { CreateOrderDto, CreateOrderForNoAuthUserDto } from '../../presentation/dtos/createOrder.dto';
+import {
+  CreateOrderDto,
+  CreateOrderForNoAuthUserDto,
+} from '../../presentation/dtos/createOrder.dto';
 import { UserEntity } from '../../../users/domain/entities/user.entity';
 import { OrderStatusEnum } from '../../domain/enums/ordersStatus.enum';
 
@@ -220,6 +223,8 @@ export class OrdersService {
   async createOrderForNoAuthUser(
     createOrderDto: CreateOrderForNoAuthUserDto,
   ): Promise<string | null> {
-    return await this.createOrderService.createOrderForNoAuthUser(createOrderDto);
+    return await this.createOrderService.createOrderForNoAuthUser(
+      createOrderDto,
+    );
   }
 }

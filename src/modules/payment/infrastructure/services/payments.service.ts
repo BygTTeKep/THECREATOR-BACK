@@ -5,7 +5,10 @@ import { TochkaPaymentService } from './tochka/payment.service';
 import { PaymentEntity } from '../../domain/entities/payment.entity';
 import { Repository } from 'typeorm';
 import { InjectRepository } from '@nestjs/typeorm';
-import { GetAllPaymentsDto, GetAllPaymentsResponseDto } from '../../presentation/controllers/dtos/getAllPayments.dto';
+import {
+  GetAllPaymentsDto,
+  GetAllPaymentsResponseDto,
+} from '../../presentation/controllers/dtos/getAllPayments.dto';
 
 @Injectable()
 export class PaymentsService {
@@ -28,11 +31,15 @@ export class PaymentsService {
     }
   }
 
-  async getAllPayments(dto: GetAllPaymentsDto): Promise<GetAllPaymentsResponseDto> {
+  async getAllPayments(
+    dto: GetAllPaymentsDto,
+  ): Promise<GetAllPaymentsResponseDto> {
     const { filters, pagination } = dto;
     const query = this.paymentRepository.createQueryBuilder('payment');
     if (filters.payment_for) {
-      query.where('payment.payment_for = :payment_for', { payment_for: filters.payment_for });
+      query.where('payment.payment_for = :payment_for', {
+        payment_for: filters.payment_for,
+      });
     }
     query.select([
       'payment.id as id',
@@ -45,7 +52,7 @@ export class PaymentsService {
     ]);
     const total = await query.getCount();
     query.orderBy('payment.created_at', 'DESC');
-    query.offset((pagination.page-1) * pagination.limit);
+    query.offset((pagination.page - 1) * pagination.limit);
     query.limit(pagination.limit);
     const payments = await query.getRawMany();
     return {

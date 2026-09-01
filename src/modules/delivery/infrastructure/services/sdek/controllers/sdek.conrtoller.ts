@@ -1,5 +1,4 @@
-import { Controller, HttpCode, Post } from "@nestjs/common";
-
+import { Controller, HttpCode, Post } from '@nestjs/common';
 
 // @Controller('delivery/sdek')
 // export class SdekController {

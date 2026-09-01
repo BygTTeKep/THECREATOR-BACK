@@ -43,7 +43,7 @@ function isSdekPayload(
   return (
     !!payload &&
     typeof payload === 'object' &&
-    'code' in payload && 
+    'code' in payload &&
     'attributes' in payload
   );
 }
@@ -61,7 +61,10 @@ export class OrderEventsListenerService {
   }
   @OnEvent(OrderEventsEnum.ORDER_CHANGED)
   async handleOrderChangedEvent(
-    payload: GetEventsFromYKResponseDto | GetPaymentStatusTochkaResponseDto | GetStatusWebhookResponseDto,
+    payload:
+      | GetEventsFromYKResponseDto
+      | GetPaymentStatusTochkaResponseDto
+      | GetStatusWebhookResponseDto,
   ) {
     try {
       if (isYoukassaPayload(payload)) {
@@ -109,7 +112,8 @@ export class OrderEventsListenerService {
           this.logger.error('Order not found');
           return;
         }
-        if (payload.attributes.code === 'RECEIVED_AT_SHIPMENT_WAREHOUSE') {}
+        if (payload.attributes.code === 'RECEIVED_AT_SHIPMENT_WAREHOUSE') {
+        }
       }
     } catch (error) {
       this.logger.error(error);

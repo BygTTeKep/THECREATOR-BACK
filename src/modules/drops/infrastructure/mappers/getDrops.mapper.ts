@@ -23,7 +23,11 @@ export class GetDropsMapper {
         const productPrice = productsPrice.filter((pp) =>
           product.some((p) => p.id === pp.id),
         );
-        const price = Math.min(...productPrice.map((p) => Math.min(...p.prices.map((pp) => Number(pp.price)))));
+        const price = Math.min(
+          ...productPrice.map((p) =>
+            Math.min(...p.prices.map((pp) => Number(pp.price))),
+          ),
+        );
         return {
           id: drop.id,
           name: drop.name,

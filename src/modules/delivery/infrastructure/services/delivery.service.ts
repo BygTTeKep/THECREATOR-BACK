@@ -22,27 +22,28 @@ export class DeliveryService {
     try {
       const countryCode = phone ? getCountryByPhone(phone) : null;
 
-      const deliveryRaw= this.deliveryRepository
-          .createQueryBuilder('delivery')
-          .select([
-            'delivery.id as id',
-            'delivery.name as name',
-            'delivery.description as description',
-          ])
-          .leftJoin(
-            'delivery_country',
-            'delivery_country',
-            'delivery_country.delivery_id = delivery.id',
-          )
-          .leftJoin(
-            'countries',
-            'countries',
-            'countries.id = delivery_country.country_id',
-          )
+      const deliveryRaw = this.deliveryRepository
+        .createQueryBuilder('delivery')
+        .select([
+          'delivery.id as id',
+          'delivery.name as name',
+          'delivery.description as description',
+        ])
+        .leftJoin(
+          'delivery_country',
+          'delivery_country',
+          'delivery_country.delivery_id = delivery.id',
+        )
+        .leftJoin(
+          'countries',
+          'countries',
+          'countries.id = delivery_country.country_id',
+        );
       if (countryCode) {
         deliveryRaw.where('countries.code = :code', { code: countryCode });
       }
-      const delivery: DeliveryEntity[] | null | undefined =  await deliveryRaw.getRawMany();
+      const delivery: DeliveryEntity[] | null | undefined =
+        await deliveryRaw.getRawMany();
       if (!delivery) {
         throw new Error('Delivery not found');
       }

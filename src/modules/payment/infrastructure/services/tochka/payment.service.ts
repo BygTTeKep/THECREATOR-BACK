@@ -89,33 +89,33 @@ export class TochkaPaymentService {
     paymentFor: PaymentFor,
   ): Promise<CreatePaymentLinkResponseDto> {
     try {
-    const response = await firstValueFrom(
-      this.httpService.post(
-        `${this.TOCHKA_BASE_URL}/acquiring/v1.0/payments`,
-        { Data: data },
-        {
-          headers: {
-            'Content-Type': 'application/json',
-            Authorization: `Bearer ${this.TOCHKA_API_KEY}`,
+      const response = await firstValueFrom(
+        this.httpService.post(
+          `${this.TOCHKA_BASE_URL}/acquiring/v1.0/payments`,
+          { Data: data },
+          {
+            headers: {
+              'Content-Type': 'application/json',
+              Authorization: `Bearer ${this.TOCHKA_API_KEY}`,
+            },
           },
-        },
-      ),
-    );
-    await this.paymentRepository.save({
-      amount: data.amount,
-      status: response.data.Data.status,
-      payment_for: paymentFor,
-      operation_id: response.data.Data.operationId,
-    });
-    return response.data;
-  } catch (error) {
-    if (error instanceof AxiosError && error?.response?.data?.requests) {
-      this.logger.error(error?.response?.data?.requests);
-      throw new Error(error?.response?.data?.requests);
+        ),
+      );
+      await this.paymentRepository.save({
+        amount: data.amount,
+        status: response.data.Data.status,
+        payment_for: paymentFor,
+        operation_id: response.data.Data.operationId,
+      });
+      return response.data;
+    } catch (error) {
+      if (error instanceof AxiosError && error?.response?.data?.requests) {
+        this.logger.error(error?.response?.data?.requests);
+        throw new Error(error?.response?.data?.requests);
+      }
+      this.logger.error(error);
+      throw new InternalServerErrorException();
     }
-    this.logger.error(error);
-    throw new InternalServerErrorException();
-  }
   }
 
   async handlePaymentStatus(body: any) {
@@ -130,7 +130,9 @@ export class TochkaPaymentService {
       },
     });
     if (!payment) {
-      this.logger.error(`Payment not found for operation id: ${response.operationId}`);
+      this.logger.error(
+        `Payment not found for operation id: ${response.operationId}`,
+      );
       return;
     }
     payment.status = response.status;
@@ -170,7 +172,10 @@ export class TochkaPaymentService {
       console.log(response.data.Data.Customer);
       const data: GetCustomerListResponseDto =
         response.data as GetCustomerListResponseDto;
-      const customerType = this.configService.get<string>('NODE_ENV') === 'production' ? 'Business' : 'Personal';
+      const customerType =
+        this.configService.get<string>('NODE_ENV') === 'production'
+          ? 'Business'
+          : 'Personal';
       const foundCustomer = data.Data.Customer.find(
         (customer) => customer.customerType === customerType,
       );
@@ -197,20 +202,20 @@ export class TochkaPaymentService {
     operationId: string,
   ): Promise<GetPaymentStatusTochkaResponseDto> {
     try {
-    const response = await firstValueFrom(
-      this.httpService.get(
-        `${this.TOCHKA_BASE_URL}/acquiring/v1.0/payments/${operationId}`,
-      ),
-    );
-    return response.data;
-  } catch (error) {
-    if (error instanceof AxiosError && error?.response?.data?.requests) {
-      this.logger.error(error?.response?.data?.requests);
-      throw new Error(error?.response?.data?.requests);
+      const response = await firstValueFrom(
+        this.httpService.get(
+          `${this.TOCHKA_BASE_URL}/acquiring/v1.0/payments/${operationId}`,
+        ),
+      );
+      return response.data;
+    } catch (error) {
+      if (error instanceof AxiosError && error?.response?.data?.requests) {
+        this.logger.error(error?.response?.data?.requests);
+        throw new Error(error?.response?.data?.requests);
+      }
+      this.logger.error(error);
+      throw new InternalServerErrorException();
     }
-    this.logger.error(error);
-    throw new InternalServerErrorException();
-  }
   }
 
   async autoGetInfoLostPayment() {

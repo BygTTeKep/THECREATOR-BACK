@@ -27,33 +27,47 @@ export class ProductsService {
   ) {}
 
   async createProduct(createProductDto: CreateProductDto): Promise<string> {
-    const newProduct = await this.productsRepository.manager.transaction(async (transactionalEntityManager) => {
-      const product = transactionalEntityManager.create(ProductsEntity, createProductDto);
-      const newProduct = await transactionalEntityManager.save(ProductsEntity, product);
-      if (createProductDto.files.length > 0) {
-        const productFiles = createProductDto.files.map((file) =>
-          transactionalEntityManager.create(ProductFilesEntity, {
-            product_id: newProduct.id,
-            file_url: file,
-          }),
+    const newProduct = await this.productsRepository.manager.transaction(
+      async (transactionalEntityManager) => {
+        const product = transactionalEntityManager.create(
+          ProductsEntity,
+          createProductDto,
         );
-        await transactionalEntityManager.save(ProductFilesEntity, productFiles);
-      }
-      if (createProductDto.variants.length > 0) {
-        const productVariants = createProductDto.variants.map((variant) =>
-          transactionalEntityManager.create(ProductVariantsEntity, {
-            product_id: newProduct.id,
-            size: variant.size,
-            price: variant.price,
-            stock: variant.stock,
-            sku: variant.sku,
-          }),
+        const newProduct = await transactionalEntityManager.save(
+          ProductsEntity,
+          product,
         );
-        await transactionalEntityManager.save(ProductVariantsEntity, productVariants);
-      }
-      return newProduct;
-    });
-    
+        if (createProductDto.files.length > 0) {
+          const productFiles = createProductDto.files.map((file) =>
+            transactionalEntityManager.create(ProductFilesEntity, {
+              product_id: newProduct.id,
+              file_url: file,
+            }),
+          );
+          await transactionalEntityManager.save(
+            ProductFilesEntity,
+            productFiles,
+          );
+        }
+        if (createProductDto.variants.length > 0) {
+          const productVariants = createProductDto.variants.map((variant) =>
+            transactionalEntityManager.create(ProductVariantsEntity, {
+              product_id: newProduct.id,
+              size: variant.size,
+              price: variant.price,
+              stock: variant.stock,
+              sku: variant.sku,
+            }),
+          );
+          await transactionalEntityManager.save(
+            ProductVariantsEntity,
+            productVariants,
+          );
+        }
+        return newProduct;
+      },
+    );
+
     return newProduct?.id ?? '';
   }
   async getProductById(id: string): Promise<ProductsEntity> {
@@ -199,7 +213,9 @@ export class ProductsService {
     const response = products.map((product) => {
       return {
         id: product.id,
-        prices: productVariants.filter((variant) => variant.product_id === product.id),
+        prices: productVariants.filter(
+          (variant) => variant.product_id === product.id,
+        ),
       };
     });
     return response;
