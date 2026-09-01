@@ -57,7 +57,7 @@ export class DropsService {
         'drops.drop_type as drop_type',
         'drops.drop_line as drop_line',
       ]);
-    if (user && user.metadata.role !== RolesEnum.ADMIN) {
+    if ((user && user.metadata.role !== RolesEnum.ADMIN) || !user) {
       query.where('drops.is_visible = true');
     }
 
@@ -85,7 +85,6 @@ export class DropsService {
     if (drop_line) {
       query.andWhere('drops.drop_line = :dl', { dl: drop_line });
     }
-    query.andWhere('drops.is_visible = true');
     const count = await query.getCount();
     query
       .skip((page - 1) * limit)
