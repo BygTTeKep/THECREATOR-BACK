@@ -41,7 +41,8 @@ export class ProductsService {
           const productFiles = createProductDto.files.map((file) =>
             transactionalEntityManager.create(ProductFilesEntity, {
               product_id: newProduct.id,
-              file_url: file,
+              file_url: file.file_url,
+              priority: file.priority,
             }),
           );
           await transactionalEntityManager.save(
@@ -83,6 +84,7 @@ export class ProductsService {
     });
     const productFiles = await this.productFilesRepository.find({
       where: { product_id: In(products.map((product) => product.id)) },
+      order: { priority: 'ASC' },
     });
     const productVariants = await this.productVariantsRepository.find({
       where: {

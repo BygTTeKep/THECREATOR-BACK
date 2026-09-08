@@ -93,6 +93,7 @@ export class DropsService {
     const drops = await query.getRawMany();
     const dropFiles = await this.dropsFilesRepository.find({
       where: { drop_id: In(drops.map((drop: any) => drop.id)) },
+      order: { priority: 'ASC' },
     });
     const products = await this.productsService.getProductsByIds(
       drops.map((drop) => drop.id),
@@ -131,11 +132,12 @@ export class DropsService {
       minTierId: createDropDto.rule.minTierId,
       whitelistOnly: createDropDto.rule.whitelistOnly,
     });
-    if (createDropDto.file_urls) {
-      const dropsFiles = createDropDto.file_urls.map((fileUrl) =>
+    if (createDropDto.files) {
+      const dropsFiles = createDropDto.files.map((file) =>
         this.dropsFilesRepository.create({
           drop_id: drop.id,
-          file_url: fileUrl,
+          file_url: file.file_url,
+          priority: file.priority,
         }),
       );
       await this.dropsFilesRepository.save(dropsFiles);
@@ -150,6 +152,7 @@ export class DropsService {
     const products = await this.productsService.getProductsByDropId(id);
     const files = await this.dropsFilesRepository.find({
       where: { drop_id: id },
+      order: { priority: 'ASC' },
     });
     const canBuy = user
       ? await this.rulesService.canUserBuyProduct(user, id)
@@ -171,6 +174,19 @@ export class DropsService {
         minMonths: tier.min_months,
       });
     }
+    if (updateDropDto.files) {
+      await this.dropsFilesRepository.delete({ drop_id: id });
+      const dropsFiles = updateDropDto.files.map((file) =>
+        this.dropsFilesRepository.create({
+          drop_id: id,
+          file_url: file.file_url,
+          priority: file.priority,
+        }),
+      );
+      await this.dropsFilesRepository.save(dropsFiles);
+      delete updateDropDto.files;
+    }
+
     await this.dropsRepository.update(id, updateDropDto);
     return drop;
   }

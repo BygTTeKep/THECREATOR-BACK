@@ -1,7 +1,16 @@
-import { IsBoolean, IsEnum, IsNumber, IsOptional } from 'class-validator';
+import {
+  IsArray,
+  IsBoolean,
+  IsEnum,
+  IsNumber,
+  IsOptional,
+  ValidateNested,
+} from 'class-validator';
 import { IsString } from 'class-validator';
 import { ApiProperty } from '@nestjs/swagger';
 import { DropsTypeEnum } from '../../domain/enums/dropType.enum';
+import { CreateDropFileDto } from './createDrop.dto';
+import { Type } from 'class-transformer';
 
 export class UpdateDropDto {
   @ApiProperty({
@@ -69,4 +78,14 @@ export class UpdateDropDto {
   @IsEnum(DropsTypeEnum)
   @IsOptional()
   type: DropsTypeEnum;
+
+  @ApiProperty({
+    description: 'The files of the drop',
+    type: [CreateDropFileDto],
+  })
+  @IsArray()
+  @IsOptional()
+  @ValidateNested({ each: true })
+  @Type(() => CreateDropFileDto)
+  files?: CreateDropFileDto[];
 }
