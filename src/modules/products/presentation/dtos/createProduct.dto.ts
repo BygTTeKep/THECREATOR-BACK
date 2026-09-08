@@ -7,6 +7,19 @@ import { IsArray } from 'class-validator';
 import { ProductSizeEnum } from '../../domain/enums/productSize.enum';
 import { ApiProperty } from '@nestjs/swagger';
 
+export class CreateProductFileDto {
+  @ApiProperty({
+    description: 'Product file URL',
+    example: '/uploads/file1.jpg',
+  })
+  @IsString()
+  @IsNotEmpty()
+  file_url: string;
+  @IsNumber()
+  @IsNotEmpty()
+  priority: number;
+}
+
 export class CreateProductDto {
   @ApiProperty({
     description: 'Drop ID',
@@ -43,12 +56,16 @@ export class CreateProductDto {
 
   @ApiProperty({
     description: 'Product files',
-    example: ['/uploads/file1.jpg', '/uploads/file2.jpg'],
+    example: [
+      { file_url: '/uploads/file1.jpg', priority: 1 },
+      { file_url: '/uploads/file2.jpg', priority: 2 },
+    ],
   })
   @IsArray()
   @IsNotEmpty()
-  @IsString({ each: true })
-  files: string[];
+  @ValidateNested({ each: true })
+  @Type(() => CreateProductFileDto)
+  files: CreateProductFileDto[];
 
   @ApiProperty({
     description: 'Product variants',

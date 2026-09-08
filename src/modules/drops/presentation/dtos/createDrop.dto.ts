@@ -24,6 +24,16 @@ export class CreateDropRuleDto {
   whitelistOnly: boolean;
 }
 
+export class CreateDropFileDto {
+  @ApiProperty({ description: 'The file URL' })
+  @IsString()
+  @IsNotEmpty()
+  file_url: string;
+  @ApiProperty({ description: 'The priority of the file' })
+  @IsNumber()
+  @IsNotEmpty()
+  priority: number;
+}
 export class CreateDropDto {
   @ApiProperty({ description: 'The name of the drop' })
   @IsString()
@@ -61,11 +71,15 @@ export class CreateDropDto {
   @IsNotEmpty()
   rule: CreateDropRuleDto;
 
-  @ApiProperty({ description: 'The file urls of the drop', type: [String] })
+  @ApiProperty({
+    description: 'The files of the drop',
+    type: [CreateDropFileDto],
+  })
   @IsArray()
-  @IsOptional()
-  @IsString({ each: true })
-  file_urls: string[];
+  @IsNotEmpty()
+  @ValidateNested({ each: true })
+  @Type(() => CreateDropFileDto)
+  files: CreateDropFileDto[];
 
   @ApiProperty({ description: 'The is visible of the drop' })
   @IsBoolean()
